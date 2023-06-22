@@ -1,2 +1,9 @@
-__pycache__/
-configs/
+_pycache_/*
+configs/*
+results/*
+
+*.pdf
+*.xlsx
+*.docx
+*.png
+

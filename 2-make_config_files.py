@@ -5,7 +5,26 @@ import sys
 import json
 import re 
 
+############################################
+# This code creates CFE config files from Python-version 
+# from Luciana's config files for C-version  #
+############################################
+
+# Modified by Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI 
+
+# Originally written by 2022 team
+# Lauren A. Bolotin 1, Francisco Haces-Garcia 2, Mochi Liao 3, Qiyue Liu 4
+# 1 San Diego State University; lbolotin3468@sdsu.edu
+# 2 University of Houston; fhacesgarcia@uh.edu
+# 3 Duke University; mochi.liao@duke.edu
+# 4 University of Illinois at Urbana-Champaign; qiyuel3@illinois.edu
+
+# ----------------------------------- Change here ----------------------------------- #
 #---------------------------- define directories ----------------------------#
+
+soil_scheme = "ode"
+partition_scheme = "Schaake"
+
 # define working directory
 working_dir = r'G:\Shared drives\SI_NextGen_Aridity\calibrate_cfe'
 
@@ -27,8 +46,11 @@ forcing_path = r'G:\Shared drives\SI_NextGen_Aridity\data\camels\gauch_etal_2020
 config_dir = os.path.join(working_dir,'configs')
 if os.path.exists(config_dir)==False: 
     os.mkdir(config_dir)
+# ----------------------------------- Change ends ----------------------------------- #
+
 
 #---------------------------- Basin Attributes ----------------------------#
+
 # read in basin list
 # basin_filename = 'basin_list_516.txt'
 basin_file = os.path.join(basin_dir,basin_filename)
@@ -55,7 +77,8 @@ for attribute_type in ['clim', 'geol', 'hydro', 'name', 'soil', 'topo', 'vege']:
 
 #---------------------------- Generate Config Files ----------------------------#
 
-for i in range(len(basin_list_str)): 
+# for i in range(len(basin_list_str)): 
+for i in range(0, 3): 
     #if i == 1 : break              # run for the first basin in the list
 
     #if i != 130: continue          # run for a specific basin in the list
@@ -103,23 +126,25 @@ for i in range(len(basin_list_str)):
     param_dict["soil_params"]["mult"] = 1000.0
 
     # generate json text
-    dict_json = {"forcing_file":forcing_file, 
-                    "catchment_area_km2":basin_attributes['topo']['area_gages2'][g], 
-                    "alpha_fc":param_dict["alpha_fc"], 
+    dict_json = {"forcing_file": forcing_file, 
+                    "catchment_area_km2": basin_attributes['topo']['area_gages2'][g], 
+                    "alpha_fc": param_dict["alpha_fc"], 
                     "soil_params": param_dict["soil_params"], 
-                    "refkdt":param_dict["refkdt"],
-                    "max_gw_storage":param_dict["max_gw_storage"],              # [calibrating parameter]
-                    "Cgw":param_dict["Cgw"],                                    # [calibrating parameter]
-                    "expon":param_dict["expon"],                                # [calibrating parameter]
-                    "gw_storage":param_dict["gw_storage"],         
-                    "soil_storage":param_dict["soil_storage"], 
-                    "K_lf":param_dict["K_lf"],                                  # [calibrating parameter]
-                    "K_nash":param_dict["K_nash"],                              # [calibrating parameter]
-                    "nash_storage":param_dict["nash_storage"].tolist(), 
-                    "giuh_ordinates":param_dict["giuh_ordinates"].tolist(), 
-                    "stand_alone":1, 
-                    "unit_test":0, 
-                    "compare_results_file":"",
+                    "refkdt": param_dict["refkdt"],
+                    "max_gw_storage": param_dict["max_gw_storage"],              # [calibrating parameter]
+                    "Cgw": param_dict["Cgw"],                                    # [calibrating parameter]
+                    "expon": param_dict["expon"],                                # [calibrating parameter]
+                    "gw_storage": param_dict["gw_storage"],         
+                    "soil_storage": param_dict["soil_storage"], 
+                    "K_lf": param_dict["K_lf"],                                  # [calibrating parameter]
+                    "K_nash": param_dict["K_nash"],                              # [calibrating parameter]
+                    "nash_storage": param_dict["nash_storage"].tolist(), 
+                    "giuh_ordinates": param_dict["giuh_ordinates"].tolist(), 
+                    "stand_alone": 1, 
+                    "unit_test": 0, 
+                    "compare_results_file": "",
+                    "partition_scheme": partition_scheme,
+                    "soil_scheme": soil_scheme,
                     }
 
     # save and export json files

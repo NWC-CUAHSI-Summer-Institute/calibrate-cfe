@@ -12,11 +12,11 @@ import matplotlib.pyplot as plt
 import bmi_cfe
 import cfe
 
+from tqdm import tqdm
+
 # TODO: Try on a CFE-ODE
 # TODO: modify the py_cfe/CFE-ODE to take the xinanjiang or schakee as numbers
-# TODO: change "basin list"
 # TODO: check if anywhere obs is made daily 
-# TODO: make it more flexible (date as json input, missing data basin as txt input)
 # TODO: make a github repo for this calibration after we decide on the direction
 # TODO: ? Check DDS parameters
 
@@ -33,56 +33,82 @@ import cfe
 # 3 Duke University; mochi.liao@duke.edu
 # 4 University of Illinois at Urbana-Champaign; qiyuel3@illinois.edu
 
-# define working dir
-working_dir = r'G:\Shared drives\SI_NextGen_Aridity\calibrate_cfe'
+
 
 # ----------------------------------- Change here ----------------------------------- #
 # ----------------------------------- Data Loading Dir ----------------------------------- #
 
 # define iteration number
 # N = 100
-N = 3
+N = 10
+print_all_process = True
+
+# define working dir
+working_dir = r'G:\Shared drives\SI_NextGen_Aridity\calibrate_cfe'
 
 # define basin list dir
 basin_dir = r'G:\Shared drives\SI_NextGen_Aridity\data\camels\gauch_etal_2020'
 basin_filename = 'basin_list_561.txt'
-basin_file = os.path.join(basin_dir,basin_filename)
-
-# define config dir
-config_dir = os.path.join(working_dir,'configs')
+missgin_data_filename = 'basin_list_missing_data.txt'
 
 # define observation file dir
-#obs_dir = os.path.join(working_dir,'usgs-streamflow')
 obs_dir = r'G:\Shared drives\SI_NextGen_Aridity\data\camels\gauch_etal_2020\usgs_streamflow'
 
-# list of basins with missing data -> skipping these
-missing_data_list = ['1552000','1552500','1567500','3338780','7301410','7315700','7346045','8050800','8101000','8104900','8109700','8158810','1187300','1510000','2178400','2196000','2202600','3592718','4197170','6919500','8176900']
+# define the spinup-calib-val period
+time_split_file = r'G:\Shared drives\SI_NextGen_Aridity\data\common_model_configs\cal-val-test-period.json'
 
 # ----------------------------------- Saving Results Dir ----------------------------------- #
 # ----------------------------------- Change end ----------------------------------- #
 
+# load basin list
+basin_file = os.path.join(basin_dir,basin_filename)    
+with open(basin_file, 'r') as file:
+    lines = file.readlines()
+    # Remove leading/trailing whitespaces and newline characters
+    lines = [line.strip() for line in lines]
+basin_list_str = lines
+
+# Basin list with missing data -> skipping these
+basin_with_nan_file = os.path.join(basin_dir, missgin_data_filename) 
+with open(basin_with_nan_file, 'r') as file:
+    lines = file.readlines()
+    # Remove leading/trailing whitespaces and newline characters
+    lines = [line.strip() for line in lines]
+missing_data_list = lines
+
+# Load time split file 
+with open(time_split_file, 'r') as file:
+    time_split = json.load(file)
+print(time_split)
+
+# define config dir
+config_dir = os.path.join(working_dir,'configs')
+
 # define result dir
 results_path = os.path.join(working_dir,'results')
-if os.path.exists(results_path)==False: os.mkdir(results_path)
+if os.path.exists(results_path)==False: 
+    os.mkdir(results_path)
 
 # define raw result dir
 raw_results_path = os.path.join(results_path,'raw')
-if os.path.exists(raw_results_path)==False: os.mkdir(raw_results_path)
+if os.path.exists(raw_results_path)==False: 
+    os.mkdir(raw_results_path)
 
 # define dir to save img
 png_dir = os.path.join(results_path,'images')
-if os.path.exists(png_dir)==False: os.mkdir(png_dir)
+if os.path.exists(png_dir)==False: 
+    os.mkdir(png_dir)
 
 # define dir to save best run results and parameters
 best_run_dir = os.path.join(results_path,'best_runs')
-if os.path.exists(best_run_dir)==False: os.mkdir(best_run_dir)
-
+if os.path.exists(best_run_dir)==False: 
+    os.mkdir(best_run_dir)
 
 
 # ----------------------------------- Setup the Spotpy Class ----------------------------------- #
 class Spotpy_setup(object): 
 
-    def __init__(self,config_file,obs_file): 
+    def __init__(self, config_file, obs_file, time_split): 
         # define config file
         self.config_file = config_file
         
@@ -121,47 +147,62 @@ class Spotpy_setup(object):
         self.eval_dates = data['date'].values
 
         # define calibration period for usgs streamflow obs.
-        cal_start_idx_usgs = np.where(self.eval_dates=='2007-10-01 00:00:00')
-        cal_end_idx_usgs = np.where(self.eval_dates=='2013-09-30 23:00:00')
-        self.eval_dates = self.eval_dates[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
-        self.obs_data = self.obs_data[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
+        # cal_start_idx_usgs = np.where(self.eval_dates=='2007-10-01 00:00:00')
+        # cal_end_idx_usgs = np.where(self.eval_dates=='2013-09-30 23:00:00')
         
-        print('###--------- usgs start date: ' + self.eval_dates[0] + '.---------')
-        print('###--------- usgs end date: ' + self.eval_dates[-1] + '.---------')
-
-        print('###---------- obs data length: ' +  str(len(self.obs_data)) + '.---------')
+        # Defined twice so delete the following lines 
+        # cal_start_idx_usgs = np.where(self.eval_dates == time_split['calibration']['start_datetime'])
+        # cal_end_idx_usgs = np.where(self.eval_dates == time_split['calibration']['end_datetime'])
+        # self.eval_dates = self.eval_dates[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
+        # self.obs_data = self.obs_data[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
+        
+        # if print_all_process: 
+        #     print('###--------- usgs start date: ' + self.eval_dates[0] + '.---------')
+        #     print('###--------- usgs end date: ' + self.eval_dates[-1] + '.---------')
+        #     print('###---------- obs data length: ' +  str(len(self.obs_data)) + '.---------')
 
     def parameters(self):
         return spotpy.parameter.generate(self.params)
         
-    def simulation(self,vector):
+    def simulation(self, vector):
         self.cfemodel = bmi_cfe.BMI_CFE(self.config_file)
-        print("### ------------ A NEW ITERATION OF CALIBRATION ------------ ###")
-        print('###--------model succesfully setup----------###')
+        
+        if print_all_process: 
+            print("### ------------ A NEW ITERATION OF CALIBRATION ------------ ###")
+            print('###--------model succesfully setup----------###')
 
         self.generated_param = vector
 
         # self.scheme = "Schaake"
 
-        print(f"###----------- parameters generated: {self.generated_param}.--------###")
+        if print_all_process: 
+            print(f"###----------- parameters generated: {self.generated_param}.--------###")
 
         self.cfemodel.initialize(param_vec = vector)
-        print('###--------model succesfully initialized----------###')
+        
+        if print_all_process: 
+            print('###--------model succesfully initialized----------###')
 
         with open(self.cfemodel.forcing_file, 'r') as f:
             self.df_forcing = pd.read_csv(f)
-        print(f"###----- forcing_file loaded:{self.cfemodel.forcing_file}. -----###")
+            
+        if print_all_process: 
+            print(f"###----- forcing_file loaded:{self.cfemodel.forcing_file}. -----###")
 
         # --------------------------------------- Run Spin-up Period --------------------------------------- # 
         # define the spin up period
-        spinup_start_idx_nldas = np.where(self.df_forcing['date']=='2006-10-01 00:00:00')
-        spinup_end_idx_nldas = np.where(self.df_forcing['date']=='2007-09-30 23:00:00')
+        # I think the 2022 team run the spin-up using the following dates 
+        # spinup_start_idx_nldas = np.where(self.df_forcing['date']=='2006-10-01 00:00:00')
+        # spinup_end_idx_nldas = np.where(self.df_forcing['date']=='2007-09-30 23:00:00')
+        spinup_start_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup']['start_datetime'])
+        spinup_end_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup']['end_datetime'])
         self.df_forcing_spinup = self.df_forcing.iloc[spinup_start_idx_nldas[0][0]:spinup_end_idx_nldas[0][0]+1,:]
 
-        print('###-------- Model Spinning Up... ----------###')
-        print('###------spinup start date: ' + self.df_forcing_spinup['date'].values[0]+ "-----###")
-        print('###------spinup end date: ' + self.df_forcing_spinup['date'].values[-1]+"-----###")
-        
+        if print_all_process: 
+            print('###-------- Model Spinning Up... ----------###')
+            print('###------spinup start date: ' + self.df_forcing_spinup['date'].values[0]+ "-----###")
+            print('###------spinup end date: ' + self.df_forcing_spinup['date'].values[-1]+"-----###")
+            
         # run the model for the spin-up period
         self.spinup_outputs=self.cfemodel.get_output_var_names()
         self.spinup_output_lists = {output:[] for output in self.spinup_outputs}
@@ -169,6 +210,7 @@ class Spotpy_setup(object):
         for precip, pet in zip(self.df_forcing_spinup['total_precipitation'],self.df_forcing_spinup['potential_evaporation']):
             #print(f"###----------loaded precip, pet: {precip},{pet}.------------###")
             #sys.exit(1)
+
             self.cfemodel.set_value('atmosphere_water__time_integral_of_precipitation_mass_flux', precip/1000)   # kg/m2/h = mm/h -> m/h
             self.cfemodel.set_value('water_potential_evaporation_flux', pet/1000/3600) # kg/m2/h = mm/h -> m/s
             self.cfemodel.update()
@@ -178,23 +220,28 @@ class Spotpy_setup(object):
 
         # --------------------------------------- Run Calibration Period --------------------------------------- # 
         # define the calibration period for nldas forcing and usgs streamflow obs.
-        cal_start_idx_nldas = np.where(self.df_forcing['date']=='2007-10-01 00:00:00')
-        cal_end_idx_nldas = np.where(self.df_forcing['date'].values=='2013-09-30 23:00:00')
+        cal_start_idx_nldas = np.where(self.df_forcing['date'] == time_split['calibration']['start_datetime'])
+        cal_end_idx_nldas = np.where(self.df_forcing['date'].values == time_split['calibration']['end_datetime'])
+        # cal_start_idx_nldas = np.where(self.df_forcing['date']=='2007-10-01 00:00:00')
+        # cal_end_idx_nldas = np.where(self.df_forcing['date'].values=='2013-09-30 23:00:00')
         self.df_forcing = self.df_forcing.iloc[cal_start_idx_nldas[0][0]:cal_end_idx_nldas[0][0]+1,:]
 
-        cal_start_idx_usgs = np.where(self.eval_dates=='2007-10-01 00:00:00')
-        cal_end_idx_usgs = np.where(self.eval_dates=='2013-09-30 23:00:00')
+        
+        cal_start_idx_usgs = np.where(self.eval_dates == time_split['calibration']['start_datetime'])
+        cal_end_idx_usgs = np.where(self.eval_dates == time_split['calibration']['end_datetime'])
         self.eval_dates = self.eval_dates[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
         self.obs_data = self.obs_data[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
         
-        print('###-------- Model Running for the Calibration Period ----------###')
-        print('###------nldas start date: ' + self.df_forcing['date'].values[0]+ "-----###")
-        print('###------nldas end date: ' + self.df_forcing['date'].values[-1]+"-----###")
-        print('###--------- usgs start date: ' + self.eval_dates[0] + '.---------')
-        print('###--------- usgs end date: ' + self.eval_dates[-1] + '.---------')
+        
+        if print_all_process: 
+            print('###-------- Model Running for the Calibration Period ----------###')
+            print('###------nldas start date: ' + self.df_forcing['date'].values[0]+ "-----###")
+            print('###------nldas end date: ' + self.df_forcing['date'].values[-1]+"-----###")
+            print('###--------- usgs start date: ' + self.eval_dates[0] + '.---------')
+            print('###--------- usgs end date: ' + self.eval_dates[-1] + '.---------')
 
-        print('###----- nldas forcing data length: ' +  str(len(self.df_forcing['date'].values))+"------###")
-        print('###---------- obs data length: ' +  str(len(self.obs_data)) + '.---------')
+            print('###----- nldas forcing data length: ' +  str(len(self.df_forcing['date'].values))+"------###")
+            print('###---------- obs data length: ' +  str(len(self.obs_data)) + '.---------')
 
         self.outputs=self.cfemodel.get_output_var_names()
         self.output_lists = {output:[] for output in self.outputs}
@@ -202,6 +249,7 @@ class Spotpy_setup(object):
         for precip, pet in zip(self.df_forcing['total_precipitation'],self.df_forcing['potential_evaporation']):
             #print(f"###----------loaded precip, pet: {precip},{pet}.------------###")
             #sys.exit(1)
+            
             self.cfemodel.set_value('atmosphere_water__time_integral_of_precipitation_mass_flux', precip/1000)   # kg/m2/h = mm/h -> m/h
             self.cfemodel.set_value('water_potential_evaporation_flux', pet/1000/3600) # kg/m2/h = mm/h -> m/s
             self.cfemodel.update()
@@ -209,14 +257,15 @@ class Spotpy_setup(object):
             for output in self.outputs:
                 self.output_lists[output].append(self.cfemodel.get_value(output))
 
-        self.cfemodel.finalize(print_mass_balance=True)
+        self.cfemodel.finalize(print_mass_balance=print_all_process)
 
-        print(f'###----------output length: {len(self.output_lists["land_surface_water__runoff_depth"])}.---------###')
+        if print_all_process: 
+            print(f'###----------output length: {len(self.output_lists["land_surface_water__runoff_depth"])}.---------###')
 
         self.sim_results = np.array(self.output_lists['land_surface_water__runoff_depth']) * 1000      # m/h -> mm/h
         return self.sim_results 
 
-    def evaluation(self,evaldates=False):
+    def evaluation(self, evaldates=False):
         if evaldates:
             self.eval_dates_output = [pd.Timestamp(self.eval_dates[i]) for i in range(len(self.eval_dates))]
             return self.eval_dates_output
@@ -230,27 +279,17 @@ class Spotpy_setup(object):
 
 
 # ----------------------------------- Loop for Calibration ----------------------------------- #
-# load basin list
-with open(basin_file, "r") as f:
-    basin_list = pd.read_csv(f, header=None)
-    
-with open(basin_file, 'r') as file:
-    lines = file.readlines()
-    # Remove leading/trailing whitespaces and newline characters
-    lines = [line.strip() for line in lines]
-basin_list_str = lines
 
 # Loop through subsets of basins
 # for i in range(0,52): 
-for i in range(0,1): 
-    
-    g = basin_list[0][i]
+for i in tqdm(range(0,1)): 
 
     g_str= basin_list_str[i]
 
-    print(f"Processing basin:{g_str}.")
+    if print_all_process: 
+        print(f"Processing basin:{g_str}.")
     
-    if g in missing_data_list: 
+    if g_str in missing_data_list: 
         print(f"None or missing usgs streamflow data for basin {g_str}, skipping this basin.") 
         continue
 
@@ -263,7 +302,7 @@ for i in range(0,1):
     obs_file = os.path.join(obs_dir,obs_filename)
 
     # set up spotpy class
-    calibration = Spotpy_setup(config_file = config_file,obs_file = obs_file)
+    calibration = Spotpy_setup(config_file=config_file, obs_file=obs_file, time_split=time_split)
 
     # define algorithm and export raw result file name
     sampler = spotpy.algorithms.dds(calibration, dbname='raw_result_file', dbformat='ram')
@@ -351,12 +390,13 @@ for i in range(0,1):
     ax2.tick_params(axis='y', labelsize= 24)
     ax1.tick_params(axis='y', labelsize= 24)
     plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='right', bbox_to_anchor=(0.5, 0.5, 0.5, 0.5))
-    plt.title(f"Simulated Streamflow against Observation after {N} Iterations of Calibration [ID: 0{g}]", fontsize = 26)
+    plt.title(f"Simulated Streamflow against Observation after {N} Iterations of Calibration [ID: {g_str}]", fontsize = 26)
     plt.tight_layout()
 
     comparison_imgname = f'{g_str}_comparison_{scheme}_{str(N)}.png'
     comparison_imgdir = os.path.join(png_dir,"Comparison")
-    if os.path.exists(comparison_imgdir)==False: os.mkdir(comparison_imgdir)
+    if os.path.exists(comparison_imgdir)==False: 
+        os.mkdir(comparison_imgdir)
     comparison_imgfile = os.path.join(comparison_imgdir,comparison_imgname)
     plt.savefig(comparison_imgfile,bbox_inches='tight')
 

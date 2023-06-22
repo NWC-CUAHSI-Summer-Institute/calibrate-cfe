@@ -10,6 +10,7 @@ import bmi_cfe
 import cfe
 
 # import hydro evaluation package
+!pip install hydroeval
 import hydroeval as he
 
 # define working dir
