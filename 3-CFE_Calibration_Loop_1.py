@@ -14,11 +14,10 @@ import cfe
 
 from tqdm import tqdm
 
-# TODO: Try on a CFE-ODE
-# TODO: modify the py_cfe/CFE-ODE to take the xinanjiang or schakee as numbers
 # TODO: check if anywhere obs is made daily 
 # TODO: make a github repo for this calibration after we decide on the direction
-# TODO: ? Check DDS parameters
+# TODO: ? Check DDS parameters, N=100
+# TODO: init setting to the model or append to import py_cfe and bmi_cfe
 
 ############################################
 # This code runs calibration (looping through 50 basins at a time) #
