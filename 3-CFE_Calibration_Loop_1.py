@@ -109,6 +109,7 @@ if os.path.exists(best_run_dir)==False:
 class Spotpy_setup(object): 
 
     def __init__(self, config_file, obs_file, time_split): 
+        
         # define config file
         self.config_file = config_file
         
@@ -131,7 +132,7 @@ class Spotpy_setup(object):
                        spotpy.parameter.Uniform('smcmax',0.20554,1,optguess = smcmax_optguess), #maybe max = 0.5
                        spotpy.parameter.Uniform('satdk',0,0.000726,optguess=satdk_optguess),
                        spotpy.parameter.Uniform('slop',0,1,optguess=slop_optguess),
-                       spotpy.parameter.Uniform('max_gw_storage',0.01,0.25,optguess=maxgw_optguess),
+                       spotpy.parameter.Uniform('max_gw_storage', 0.01, 0.25,optguess=maxgw_optguess),
                        spotpy.parameter.Uniform('expon',1,8,optguess=expon_optguess),
                        spotpy.parameter.Uniform('Cgw',1.8e-6,1.8e-3,optguess=cgw_optguess),
                        spotpy.parameter.Uniform('K_lf',0,1,optguess=klf_optguess),
@@ -178,6 +179,7 @@ class Spotpy_setup(object):
         if print_all_process: 
             print(f"###----------- parameters generated: {self.generated_param}.--------###")
 
+        # TODO: change to read param from the config files 
         self.cfemodel.initialize(param_vec = vector)
         
         if print_all_process: 
@@ -203,10 +205,11 @@ class Spotpy_setup(object):
             print('###------spinup start date: ' + self.df_forcing_spinup['date'].values[0]+ "-----###")
             print('###------spinup end date: ' + self.df_forcing_spinup['date'].values[-1]+"-----###")
             
-        # run the model for the spin-up period
+        # Initialize
         self.spinup_outputs=self.cfemodel.get_output_var_names()
         self.spinup_output_lists = {output:[] for output in self.spinup_outputs}
 
+        # run the model for the spin-up period
         for precip, pet in zip(self.df_forcing_spinup['total_precipitation'],self.df_forcing_spinup['potential_evaporation']):
             #print(f"###----------loaded precip, pet: {precip},{pet}.------------###")
             #sys.exit(1)
@@ -226,14 +229,12 @@ class Spotpy_setup(object):
         # cal_end_idx_nldas = np.where(self.df_forcing['date'].values=='2013-09-30 23:00:00')
         self.df_forcing = self.df_forcing.iloc[cal_start_idx_nldas[0][0]:cal_end_idx_nldas[0][0]+1,:]
 
-        
         cal_start_idx_usgs = np.where(self.eval_dates == time_split['calibration']['start_datetime'])
         cal_end_idx_usgs = np.where(self.eval_dates == time_split['calibration']['end_datetime'])
         self.eval_dates = self.eval_dates[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
         self.obs_data = self.obs_data[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
         
-        
-        if print_all_process: 
+        if print_all_process:
             print('###-------- Model Running for the Calibration Period ----------###')
             print('###------nldas start date: ' + self.df_forcing['date'].values[0]+ "-----###")
             print('###------nldas end date: ' + self.df_forcing['date'].values[-1]+"-----###")
@@ -243,9 +244,11 @@ class Spotpy_setup(object):
             print('###----- nldas forcing data length: ' +  str(len(self.df_forcing['date'].values))+"------###")
             print('###---------- obs data length: ' +  str(len(self.obs_data)) + '.---------')
 
+        # Initialize calibration period 
         self.outputs=self.cfemodel.get_output_var_names()
         self.output_lists = {output:[] for output in self.outputs}
 
+        # Model run
         for precip, pet in zip(self.df_forcing['total_precipitation'],self.df_forcing['potential_evaporation']):
             #print(f"###----------loaded precip, pet: {precip},{pet}.------------###")
             #sys.exit(1)
@@ -284,6 +287,7 @@ class Spotpy_setup(object):
 # for i in range(0,52): 
 for i in tqdm(range(0,1)): 
 
+    # ------------------ Preparation ----------------- ##
     g_str= basin_list_str[i]
 
     if print_all_process: 
@@ -295,17 +299,18 @@ for i in tqdm(range(0,1)):
 
     # locate config file
     config_filename = f'cat_{g_str}_bmi_config_cfe.json'
-    config_file = os.path.join(config_dir,config_filename)
+    config_file = os.path.join(config_dir, config_filename)
 
     # locate usgs observation file
     obs_filename = f'{g_str}-usgs-hourly.csv'
     obs_file = os.path.join(obs_dir,obs_filename)
 
     # set up spotpy class
-    calibration = Spotpy_setup(config_file=config_file, obs_file=obs_file, time_split=time_split)
+    calibration_instance = Spotpy_setup(config_file=config_file, obs_file=obs_file, time_split=time_split)
 
+    # ------------------ Calibration ----------------- ##
     # define algorithm and export raw result file name
-    sampler = spotpy.algorithms.dds(calibration, dbname='raw_result_file', dbformat='ram')
+    sampler = spotpy.algorithms.dds(calibration_instance, dbname='raw_result_file', dbformat='ram')
 
     # start calibration
     sampler.sample(N)
@@ -313,7 +318,7 @@ for i in tqdm(range(0,1)):
     # export final results
     results = sampler.getdata()
 
-    scheme = calibration.cfemodel.surface_partitioning_scheme
+    scheme = calibration_instance.cfemodel.surface_partitioning_scheme
 
     all_result_filename = f'{g_str}_all_results_dds_{scheme}_{str(N)}.npy'
     all_result_file = os.path.join(raw_results_path,all_result_filename)
@@ -369,10 +374,10 @@ for i in tqdm(range(0,1)):
     plt.savefig(objvalues_imgfile,bbox_inches='tight')
 
     ### plot simulation vs. observation ##
-    dates = calibration.evaluation(evaldates=True)
+    dates = calibration_instance.evaluation(evaldates=True)
     fig, ax1 = plt.subplots(figsize = (18,12)) 
     p1, = ax1.plot(dates[0:8760],best_sim[0:8760],'tomato', linewidth = 2,label = "sim")
-    p2, = ax1.plot(dates[0:8760],calibration.obs_data[0:8760],'k',label = "obs")
+    p2, = ax1.plot(dates[0:8760],calibration_instance.obs_data[0:8760],'k',label = "obs")
     ax1.set_ylabel('Discharge (mm/h)',fontsize = 24)
     ax1.set_ylim([0,2])
     ax1.margins(x=0)
@@ -380,7 +385,7 @@ for i in tqdm(range(0,1)):
     ax1.xaxis.set_label_position('bottom')
     ax1.tick_params(axis="x",direction="in")
     ax2 = ax1.twinx()
-    p3, = ax2.plot(dates[0:8760],calibration.df_forcing['total_precipitation'][0:8760],'tab:blue', label = "precip")
+    p3, = ax2.plot(dates[0:8760],calibration_instance.df_forcing['total_precipitation'][0:8760],'tab:blue', label = "precip")
     ax2.set_ylim([50,0])
     ax2.margins(x=0)
     #ax2.invert_yaxis()
