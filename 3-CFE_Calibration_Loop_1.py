@@ -8,15 +8,14 @@ import pandas as pd
 import json
 import matplotlib.pyplot as plt
 
-# import the cfe model
+# import the cfe model (the folder reside one layer above)
+sys.path.append(r'..\python_cfe')
 import bmi_cfe
 import cfe
 
 from tqdm import tqdm
 
-# TODO: check if anywhere obs is made daily 
-# TODO: ? Check DDS parameters, N=100
-# TODO: init setting to the model or append to import py_cfe and bmi_cfe
+# TODO: check why observation data is daily
 
 ############################################
 # This code runs calibration (looping through 50 basins at a time) #
@@ -32,7 +31,15 @@ from tqdm import tqdm
 # ----------------------------------- Change here ----------------------------------- #
 # ----------------------------------- Data Loading Dir ----------------------------------- #
 
-# define iteration number
+## Define iteration number
+# Ideally, N between 1000 to 10000 would be optimal
+# "Algorithms are compared for optimization problems ranging from 6 to 30 dimensions, and each problem is solved in 1000 to 10,000 total function evaluations per optimization trial."
+# N = 500 is recommended by Raven document (https://ravenpy.readthedocs.io/_/downloads/en/latest/pdf/)
+# However, probably for time-limitation, the previous team picked N=100? and probably we will 
+# Reference paper: Tolson, B.A. and Shoemaker, C.A., 2007. Dynamically dimensioned search algorithm for computationally efficient watershed model calibration. Water Resources Research, 43(1)
+# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/algorithms/dds.py
+# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/examples/spot_setup_dds.py
+# Reference code: https://github.com/thouska/spotpy/blob/master/tutorials/tutorial_dds_hymod.py
 # N = 100
 N = 10
 
@@ -364,14 +371,14 @@ for i in range(0, max_nbasin_per_loop):
     # get best parameters and sim
     best_params = spotpy.analyser.get_best_parameterset(results)
 
-    obj_values=results['like1']
-    best_obj_value=np.nanmax(obj_values)
-    best_idx=np.where(obj_values==best_obj_value)
+    obj_values = results['like1']
+    best_obj_value = np.nanmax(obj_values)
+    best_idx = np.where(obj_values==best_obj_value)
 
     best_sim = spotpy.analyser.get_modelruns(results[best_idx[0][0]])
     best_sim = np.array([best_sim[i] for i in range(len(best_sim))])
 
-    best_run = {"best parameters":list(best_params[0]),
+    best_run = {"best parameters": list(best_params[0]),
                 "best objective values": best_obj_value, 
                 "best simulation results": list(best_sim)}
 
@@ -408,17 +415,22 @@ for i in range(0, max_nbasin_per_loop):
     objvalues_imgfile = os.path.join(objvalues_dir,objvalues_imgname)
     plt.savefig(objvalues_imgfile,bbox_inches='tight')
 
-    ### plot simulation vs. observation ##
+    ### plot timeseries of simulation vs. observation ##
+    
     dates = calibration_instance.evaluation(evaldates=True)
     fig, ax1 = plt.subplots(figsize = (18,12)) 
-    p1, = ax1.plot(dates[0:8760],best_sim[0:8760],'tomato', linewidth = 2,label = "sim")
-    p2, = ax1.plot(dates[0:8760],calibration_instance.obs_data[0:8760],'k',label = "obs")
+    
+    # Plot obs & sim flow 
+    p1, = ax1.plot(dates[0:8760], best_sim[0:8760],'tomato', linewidth = 2, label = "sim")
+    p2, = ax1.plot(dates[0:8760], calibration_instance.obs_data[0:8760], 'k', label = "obs")
     ax1.set_ylabel('Discharge (mm/h)',fontsize = 24)
     ax1.set_ylim([0,2])
     ax1.margins(x=0)
     ax1.xaxis.set_ticks_position('both')
     ax1.xaxis.set_label_position('bottom')
     ax1.tick_params(axis="x",direction="in")
+    
+    # Plot precip
     ax2 = ax1.twinx()
     p3, = ax2.plot(dates[0:8760],calibration_instance.df_forcing['total_precipitation'][0:8760],'tab:blue', label = "precip")
     ax2.set_ylim([50,0])
@@ -429,6 +441,7 @@ for i in range(0, max_nbasin_per_loop):
     ax2.tick_params(axis='x', labelsize= 24)
     ax2.tick_params(axis='y', labelsize= 24)
     ax1.tick_params(axis='y', labelsize= 24)
+    
     plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='right', bbox_to_anchor=(0.5, 0.5, 0.5, 0.5))
     plt.title(f"Simulated Streamflow against Observation after {N} Iterations of Calibration [ID: {g_str}]", fontsize = 26)
     plt.tight_layout()
