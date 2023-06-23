@@ -15,7 +15,6 @@ import cfe
 from tqdm import tqdm
 
 # TODO: check if anywhere obs is made daily 
-# TODO: make a github repo for this calibration after we decide on the direction
 # TODO: ? Check DDS parameters, N=100
 # TODO: init setting to the model or append to import py_cfe and bmi_cfe
 
@@ -36,10 +35,12 @@ from tqdm import tqdm
 # define iteration number
 # N = 100
 N = 10
-print_all_process = True
 
 # Number of basin to run for a loop
 max_nbasin_per_loop = 1
+
+# If you want to print3 everything
+print_all_process = True
 
 # define working dir
 working_dir = r'G:\Shared drives\SI_NextGen_Aridity\calibrate_cfe'
