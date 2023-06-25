@@ -180,9 +180,6 @@ class Spotpy_setup(object):
         def custom_load_forcing_file(self):
             self.forcing_data = pd.read_csv(self.forcing_file)
             # Column name change to accomodate NLDAS forcing by https://zenodo.org/record/4072701
-            # Check if "date" is in the column names
-            # if "date" in self.forcing_data.columns:
-                # Change the column name to "time"
             self.forcing_data.rename(columns={"date": "time"}, inplace=True)
             pass
         
