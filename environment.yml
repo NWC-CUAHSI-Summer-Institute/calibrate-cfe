@@ -1,0 +1,28 @@
+name: CFE-torch
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - pip
+
+  # Core scientific python
+  - numpy
+  - scipy
+  - pandas
+  - jupyterlab
+  - netCDF4
+
+  # Computation
+  - pytorch
+  - scikit-learn
+  - scikit-fuzzy
+  - geopandas
+  - xarray
+
+  # Plotting
+  - matplotlib
+  - seaborn
+
+  # Spatial packages
+  - spotpy
