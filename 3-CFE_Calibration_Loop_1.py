@@ -9,7 +9,8 @@ import json
 import matplotlib.pyplot as plt
 
 # import the cfe model (the folder reside one layer above)
-sys.path.append(r'..\python_cfe')
+# sys.path.append(r'..\cfe_py')
+sys.path.append(r'G:\Shared drives\SI_NextGen_Aridity\cfe_py')
 import bmi_cfe
 import cfe
 
@@ -61,7 +62,7 @@ missgin_data_filename = 'basin_list_missing_data.txt'
 obs_dir = r'G:\Shared drives\SI_NextGen_Aridity\data\camels\gauch_etal_2020\usgs_streamflow'
 
 # define the spinup-calib-val period
-time_split_file = r'G:\Shared drives\SI_NextGen_Aridity\data\common_model_configs\cal-val-test-period.json'
+time_split_file = r'G:\Shared drives\SI_NextGen_Aridity\data\model_common_configs\cal-val-test-period.json'
 
 # ----------------------------------- Saving Results Dir ----------------------------------- #
 # ----------------------------------- Change end ----------------------------------- #
@@ -109,7 +110,6 @@ if os.path.exists(png_dir)==False:
 best_run_dir = os.path.join(results_path,'best_runs')
 if os.path.exists(best_run_dir)==False: 
     os.mkdir(best_run_dir)
-
 
 # ----------------------------------- Setup the Spotpy Class ----------------------------------- #
 class Spotpy_setup(object): 
@@ -176,6 +176,15 @@ class Spotpy_setup(object):
         return spotpy.parameter.generate(self.params)
         
     def simulation(self, vector):
+                
+        def custom_load_forcing_file(self):
+            self.forcing_data = pd.read_csv(self.forcing_file)
+            # Column name change to accomodate NLDAS forcing by https://zenodo.org/record/4072701
+            # Check if "date" is in the column names
+            # if "date" in self.forcing_data.columns:
+                # Change the column name to "time"
+            self.forcing_data.rename(columns={"date": "time"}, inplace=True)
+            pass
         
         if print_all_process: 
             print("### ------------ A NEW ITERATION OF CALIBRATION ------------ ###")
@@ -213,6 +222,8 @@ class Spotpy_setup(object):
 
 
         self.cfemodel = bmi_cfe.BMI_CFE(cfg_file=os.path.join(self.config_dir, config_temp_filename))
+        self.cfemodel.load_forcing_file = custom_load_forcing_file.__get__(self.cfemodel)
+        
         if print_all_process: 
             print('###--------model succesfully setup----------###')
         
@@ -237,8 +248,8 @@ class Spotpy_setup(object):
         # I think the 2022 team run the spin-up using the following dates 
         # spinup_start_idx_nldas = np.where(self.df_forcing['date']=='2006-10-01 00:00:00')
         # spinup_end_idx_nldas = np.where(self.df_forcing['date']=='2007-09-30 23:00:00')
-        spinup_start_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup']['start_datetime'])
-        spinup_end_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup']['end_datetime'])
+        spinup_start_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup-for-calibration']['start_datetime'])
+        spinup_end_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup-for-calibration']['end_datetime'])
         self.df_forcing_spinup = self.df_forcing.iloc[spinup_start_idx_nldas[0][0]:spinup_end_idx_nldas[0][0]+1,:]
 
         if print_all_process: 
