@@ -7,31 +7,32 @@ import numpy as np
 import pandas as pd
 import json
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
-# import the cfe model (the folder reside one layer above)
-# sys.path.append(r'..\cfe_py')
-sys.path.append(r'G:\Shared drives\SI_NextGen_Aridity\cfe_py')
+# import the cfe model
+sys.path.append(r'..\cfe_py')
 import bmi_cfe
 import cfe
 
-from tqdm import tqdm
-
-# TODO: check why observation data is daily
 
 ############################################
-# This code runs calibration (looping through 50 basins at a time) #
+# This code runs calibration (looping through max_nbasin_per_loop basins at a time) #
 ############################################
-
-# Modified by Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI 
 
 # Originally written by 2022 team
-# Qiyue Liu 
-# University of Illinois at Urbana-Champaign; qiyuel3@illinois.edu
+# Qiyue Liu (University of Illinois at Urbana-Champaign; qiyuel3@illinois.edu) in 2022 SI
+# Modified by Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI 
 
+# Folder structure
+# project_folder/
+# ├─ data/
+# ├─ cfe_py/
+# ├─ calibrate_cfe/
+# │  ├─ configs/
+# │  ├─ results/
 
+# ----------------------------------------------------------------------------------- #
 # ----------------------------------- Change here ----------------------------------- #
-# ----------------------------------- Data Loading Dir ----------------------------------- #
-
 ## Define iteration number
 # Ideally, N between 1000 to 10000 would be optimal
 # "Algorithms are compared for optimization problems ranging from 6 to 30 dimensions, and each problem is solved in 1000 to 10,000 total function evaluations per optimization trial."
@@ -50,24 +51,24 @@ max_nbasin_per_loop = 1
 # If you want to print3 everything
 print_all_process = True
 
-# define working dir
-working_dir = r'G:\Shared drives\SI_NextGen_Aridity\calibrate_cfe'
+# define config dir
+config_dir = r'.\configs'
 
 # define basin list dir
-basin_dir = r'G:\Shared drives\SI_NextGen_Aridity\data\camels\gauch_etal_2020'
+basin_dir = r'..\data\camels\gauch_etal_2020'
 basin_filename = 'basin_list_561.txt'
 missgin_data_filename = 'basin_list_missing_data.txt'
 
 # define observation file dir
-obs_dir = r'G:\Shared drives\SI_NextGen_Aridity\data\camels\gauch_etal_2020\usgs_streamflow'
+obs_dir = r'..\data\camels\gauch_etal_2020\usgs_streamflow'
 
 # define the spinup-calib-val period
-time_split_file = r'G:\Shared drives\SI_NextGen_Aridity\data\model_common_configs\cal-val-test-period.json'
-
-# ----------------------------------- Saving Results Dir ----------------------------------- #
+time_split_file = r'..\data\model_common_configs\cal-val-test-period.json'
 # ----------------------------------- Change end ----------------------------------- #
+# ----------------------------------------------------------------------------------- #
 
-# load basin list
+# --------------------------------- Load settings  ----------------------------------- #
+# Load basin list
 basin_file = os.path.join(basin_dir,basin_filename)    
 with open(basin_file, 'r') as file:
     lines = file.readlines()
@@ -88,11 +89,10 @@ with open(time_split_file, 'r') as file:
     time_split = json.load(file)
 print(time_split)
 
-# define config dir
-config_dir = os.path.join(working_dir,'configs')
+# --------------------------------- Setup directories ----------------------------------- #
 
 # define result dir
-results_path = os.path.join(working_dir,'results')
+results_path = r'.\results'
 if os.path.exists(results_path)==False: 
     os.mkdir(results_path)
 
@@ -121,7 +121,7 @@ class Spotpy_setup(object):
         self.obs_file_path = obs_file_path
         self.gauge_id = gauge_id
         
-        # load original model and soil parameters for optguess
+        # load original model and soil parameters for optguess from Luciana Cunha
         # locate config file
         config_filename = f'cat_{self.gauge_id}_bmi_config_cfe.json'
         with open(os.path.join(self.config_dir, config_filename)) as data_file:
@@ -158,25 +158,22 @@ class Spotpy_setup(object):
         self.eval_dates = obs_data0['date'].values
 
         # define calibration period for usgs streamflow obs.
-        # cal_start_idx_usgs = np.where(self.eval_dates=='2007-10-01 00:00:00')
-        # cal_end_idx_usgs = np.where(self.eval_dates=='2013-09-30 23:00:00')
-        
-        # Defined twice so delete the following lines 
         cal_start_idx_usgs = np.where(self.eval_dates == time_split['calibration']['start_datetime'])
         cal_end_idx_usgs = np.where(self.eval_dates == time_split['calibration']['end_datetime'])
         self.eval_dates = self.eval_dates[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
         self.obs_data = self.obs_data[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
         
-        # if print_all_process: 
-        #     print('###--------- usgs start date: ' + self.eval_dates[0] + '.---------')
-        #     print('###--------- usgs end date: ' + self.eval_dates[-1] + '.---------')
-        #     print('###---------- obs data length: ' +  str(len(self.obs_data)) + '.---------')
+        if print_all_process: 
+            print('###--------- usgs start date: ' + self.eval_dates[0] + '.---------')
+            print('###--------- usgs end date: ' + self.eval_dates[-1] + '.---------')
+            print('###---------- obs data length: ' +  str(len(self.obs_data)) + '.---------')
 
     def parameters(self):
         return spotpy.parameter.generate(self.params)
         
     def simulation(self, vector):
-                
+        
+        # Setup custom method in BMI-CFE
         def custom_load_forcing_file(self):
             self.forcing_data = pd.read_csv(self.forcing_file)
             # Column name change to accomodate NLDAS forcing by https://zenodo.org/record/4072701
@@ -186,7 +183,7 @@ class Spotpy_setup(object):
         if print_all_process: 
             print("### ------------ A NEW ITERATION OF CALIBRATION ------------ ###")
 
-        ## Parameter preparation ### 
+        # --------------------------------------- Parameter preparation --------------------------------------- # 
         # Get randomly generated parameter in Spotpy format
         self.generated_param = vector
         
@@ -209,7 +206,7 @@ class Spotpy_setup(object):
         else:
             self.cfe_cfg['partition_scheme'] = "Xinanjiang"
             
-        #  
+        # Dump optguess parameter into temporary config file
         config_temp_filename = f'cat_{self.gauge_id}_bmi_config_cfe_temp.json'
         with open(os.path.join(self.config_dir, config_temp_filename), 'w') as out_file:
             json.dump(self.cfe_cfg, out_file)
@@ -217,19 +214,15 @@ class Spotpy_setup(object):
         if print_all_process: 
             print(f"###----------- parameters generated: {self.generated_param}.--------###")
 
-
+        # --------------------------------------- Set-up CFE model --------------------------------------- # 
+        # Set up CFE model
         self.cfemodel = bmi_cfe.BMI_CFE(cfg_file=os.path.join(self.config_dir, config_temp_filename))
         self.cfemodel.load_forcing_file = custom_load_forcing_file.__get__(self.cfemodel)
         
         if print_all_process: 
             print('###--------model succesfully setup----------###')
         
-        # TODO: change to read param from the config files 
-        # Change the self.generated_param (write a config file and save it, convert the number to binary for partitioning)
-        # Make sure cfemodel.initialize reads the config file 
         self.cfemodel.initialize()
-        
-        # self.cfemodel.initialize(param_vec = vector)
         
         if print_all_process: 
             print('###--------model succesfully initialized----------###')
@@ -237,14 +230,12 @@ class Spotpy_setup(object):
         with open(self.cfemodel.forcing_file, 'r') as f:
             self.df_forcing = pd.read_csv(f)
             
-        if print_all_process: 
+        if print_all_process:
             print(f"###----- forcing_file loaded:{self.cfemodel.forcing_file}. -----###")
 
         # --------------------------------------- Run Spin-up Period --------------------------------------- # 
+        
         # define the spin up period
-        # I think the 2022 team run the spin-up using the following dates 
-        # spinup_start_idx_nldas = np.where(self.df_forcing['date']=='2006-10-01 00:00:00')
-        # spinup_end_idx_nldas = np.where(self.df_forcing['date']=='2007-09-30 23:00:00')
         spinup_start_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup-for-calibration']['start_datetime'])
         spinup_end_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup-for-calibration']['end_datetime'])
         self.df_forcing_spinup = self.df_forcing.iloc[spinup_start_idx_nldas[0][0]:spinup_end_idx_nldas[0][0]+1,:]
@@ -274,15 +265,7 @@ class Spotpy_setup(object):
         # define the calibration period for nldas forcing and usgs streamflow obs.
         cal_start_idx_nldas = np.where(self.df_forcing['date'] == time_split['calibration']['start_datetime'])
         cal_end_idx_nldas = np.where(self.df_forcing['date'].values == time_split['calibration']['end_datetime'])
-        # cal_start_idx_nldas = np.where(self.df_forcing['date']=='2007-10-01 00:00:00')
-        # cal_end_idx_nldas = np.where(self.df_forcing['date'].values=='2013-09-30 23:00:00')
         self.df_forcing = self.df_forcing.iloc[cal_start_idx_nldas[0][0]:cal_end_idx_nldas[0][0]+1,:]
-
-        # No need to define it 
-        # cal_start_idx_usgs = np.where(self.eval_dates == time_split['calibration']['start_datetime'])
-        # cal_end_idx_usgs = np.where(self.eval_dates == time_split['calibration']['end_datetime'])
-        # self.eval_dates = self.eval_dates[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
-        # self.obs_data = self.obs_data[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
         
         if print_all_process:
             print('###-------- Model Running for the Calibration Period ----------###')
@@ -335,7 +318,6 @@ class Spotpy_setup(object):
 
 # Loop through subsets of basins
 for i in range(0, max_nbasin_per_loop):
-# for i in tqdm(range(0,1)): 
 
     # ------------------ Preparation ----------------- ##
     g_str= basin_list_str[i]
@@ -356,7 +338,8 @@ for i in range(0, max_nbasin_per_loop):
         config_dir=config_dir, 
         obs_file_path=obs_file_path, 
         time_split=time_split,
-        gauge_id=g_str)
+        gauge_id=g_str
+        )
 
     # ------------------ Calibration ----------------- ##
     # define algorithm and export raw result file name
@@ -374,7 +357,7 @@ for i in range(0, max_nbasin_per_loop):
     all_result_file = os.path.join(raw_results_path,all_result_filename)
     np.save(all_result_file,results)
 
-    #------------------------------------------ Evaluation and Plots ------------------------------------------#
+    #------------------------------------------ Best parameter and Plots ------------------------------------------#
 
     # get best parameters and sim
     best_params = spotpy.analyser.get_best_parameterset(results)
