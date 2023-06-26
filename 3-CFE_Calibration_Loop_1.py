@@ -310,8 +310,8 @@ class Spotpy_setup(object):
             print(f"###--------- double check - length of obs_data: {len(self.obs_data)}. -----------###")
             return self.obs_data
 
-    def objectivefunction(self,simulation,evaluation, params=None):
-        self.obj_function = spotpy.objectivefunctions.kge(evaluation,simulation)
+    def objectivefunction(self, simulation, evaluation, params=None):
+        self.obj_function = spotpy.objectivefunctions.kge(evaluation[~np.isnan(evaluation)], simulation[~np.isnan(evaluation)])
         return self.obj_function
 
 
