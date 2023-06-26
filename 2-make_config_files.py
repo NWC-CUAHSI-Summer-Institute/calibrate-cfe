@@ -19,33 +19,40 @@ import re
 # 3 Duke University; mochi.liao@duke.edu
 # 4 University of Illinois at Urbana-Champaign; qiyuel3@illinois.edu
 
+# Folder structure
+# project_folder/
+# ├─ data/
+# ├─ cfe_py/
+# ├─ calibrate_cfe/
+# │  ├─ configs/
+# │  ├─ results/
+
+# Run this from project_folder/calibrate_cfe
+
 # ----------------------------------- Change here ----------------------------------- #
 #---------------------------- define directories ----------------------------#
+
+# TODO: make this wget from Google Drive ... 
+# Pre-requisits, optguess configs are download to calibrate_cfe/configs/CFE_Config_lumped_Luciana
 
 soil_scheme = "ode"
 partition_scheme = "Schaake"
 
-# define working directory
-working_dir = r'G:\Shared drives\SI_NextGen_Aridity\calibrate_cfe'
-
 # define GIUH and soil params files
-GIUH_soil_dir = r'G:\Shared drives\SI_NextGen_Aridity\calibrate_cfe\configs\CFE_Config_lumped_Luciana'
+GIUH_soil_dir = r'.\configs\CFE_Config_lumped_Luciana'
 
 # define basin list dir
-basin_dir = r'G:\Shared drives\SI_NextGen_Aridity\data\camels\gauch_etal_2020'
+basin_dir = r'..\data\camels\gauch_etal_2020'
 basin_filename = 'basin_list_561.txt' # It was 516 basin in 2022 code 
 
 # define camel dataset dir
-camels_attr_dir = r'G:\Shared drives\SI_NextGen_Aridity\data\camels\ucar'
+camels_attr_dir = r'..\data\camels\ucar'
 
 # define atmospheric forcing file dir
-        #forcing_path = os.path.join(working_dir,'nldas-forcing')
-forcing_path = r'G:\Shared drives\SI_NextGen_Aridity\data\camels\gauch_etal_2020\nldas_hourly'
+forcing_path = r'..\data\camels\gauch_etal_2020\nldas_hourly'
 
 # define dir for exported json
-config_dir = os.path.join(working_dir,'configs')
-if os.path.exists(config_dir)==False: 
-    os.mkdir(config_dir)
+config_dir = r'.\configs'
 # ----------------------------------- Change ends ----------------------------------- #
 
 
