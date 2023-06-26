@@ -154,7 +154,8 @@ class Spotpy_setup(object):
         # Load test comparison data (streamflow) from usgs data
         
         obs_data0 = pd.read_csv(self.obs_file_path)
-        self.obs_data = obs_data0['QObs_CAMELS(mm/h)'].values
+        # self.obs_data = obs_data0['QObs_CAMELS(mm/h)'].values # This was daily data
+        self.obs_data = obs_data0['QObs(mm/h)'].values # Use hourly data instead
         self.eval_dates = obs_data0['date'].values
 
         # define calibration period for usgs streamflow obs.
