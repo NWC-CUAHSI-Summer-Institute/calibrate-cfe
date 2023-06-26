@@ -15,9 +15,11 @@ Modified by
 - Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI
 
 # Folder structure
+```
 project_folder/
 ├─ data/
 ├─ cfe_py/
 ├─ calibrate_cfe/
 │  ├─ configs/
 │  ├─ results/
+```
