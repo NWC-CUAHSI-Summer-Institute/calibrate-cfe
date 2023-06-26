@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import json
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 
 # import the cfe model
 sys.path.append(r'..\cfe_py')
@@ -56,7 +55,7 @@ config_dir = r'.\configs'
 
 # define basin list dir
 basin_dir = r'..\data\camels\gauch_etal_2020'
-basin_filename = 'basin_list_561.txt'
+basin_filename = 'basin_list_516.txt'
 missgin_data_filename = 'basin_list_missing_data.txt'
 
 # define observation file dir
