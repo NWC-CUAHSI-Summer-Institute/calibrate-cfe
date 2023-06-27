@@ -54,8 +54,6 @@ with open(time_split_file, 'r') as file:
     time_split = json.load(file)
 print(time_split)
 
-
-    
 results_path = r'.\results'
 png_dir = os.path.join(results_path,'images')
 best_run_dir = os.path.join(results_path,'best_runs')
