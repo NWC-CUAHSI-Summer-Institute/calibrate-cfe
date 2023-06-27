@@ -54,9 +54,20 @@ with open(time_split_file, 'r') as file:
     time_split = json.load(file)
 print(time_split)
 
+
+    
 results_path = r'.\results'
 png_dir = os.path.join(results_path,'images')
 best_run_dir = os.path.join(results_path,'best_runs')
+
+validation_imgdir = os.path.join(png_dir,"Testing")
+if os.path.exists(validation_imgdir)==False: 
+    os.mkdir(validation_imgdir)
+    
+test_dir = os.path.join(results_path,"Testing")
+if os.path.exists(test_dir)==False: 
+    os.mkdir(test_dir)
+    
 # define iteration number
 
 # ---------------------------------------- Loop through Validation Period ---------------------------------------- #
@@ -94,7 +105,7 @@ for i in range(0, 1):
     else:
         print(f"Processing basin:{g_str}.")
 
-    print('###--------model succesfully setup----------###')
+    # ------------------ Read the best params from previous file ----------------- ##
 
     # load best parameters found in calibration period
     best_run_filename = '**/*' + str(g_str) + '*.*'
@@ -149,8 +160,8 @@ for i in range(0, 1):
 
     # --------------------------------------- Run Spin-up Period --------------------------------------- # 
     # define the spin up period
-    spinup_start_idx_nldas = np.where(df_forcing['date']=='2001-10-01 00:00:00')
-    spinup_end_idx_nldas = np.where(df_forcing['date']=='2002-09-30 23:00:00')
+    spinup_start_idx_nldas = np.where(df_forcing['date']==time_split["spinup-for-testing"]["start_datetime"])
+    spinup_end_idx_nldas = np.where(df_forcing['date']==time_split["spinup-for-testing"]["end_datetime"])
     cfemodel.df_forcing_spinup = df_forcing.iloc[spinup_start_idx_nldas[0][0]:spinup_end_idx_nldas[0][0]+1,:]
 
     print('###-------- model spinning up ----------###')
@@ -173,8 +184,8 @@ for i in range(0, 1):
 
     # --------------------------------------- Rununing for the Validation Period --------------------------------------- #
     # define the calibration period for nldas forcing and usgs streamflow obs.
-    cal_start_idx_nldas = np.where(df_forcing['date']=='2002-10-01 00:00:00')
-    cal_end_idx_nldas = np.where(df_forcing['date']=='2007-09-30 23:00:00')
+    cal_start_idx_nldas = np.where(df_forcing['date']==time_split["testing"]["start_datetime"])
+    cal_end_idx_nldas = np.where(df_forcing['date']==time_split["testing"]["end_datetime"])
     df_forcing = df_forcing.iloc[cal_start_idx_nldas[0][0]:cal_end_idx_nldas[0][0]+1,:]
 
     print('###----- nldas forcing data length: ' +  str(len(df_forcing['date'].values))+"------###")
@@ -197,17 +208,16 @@ for i in range(0, 1):
 
     # ----------------------------------- Evaluate Results ----------------------------------- #
     # Load Observation file
-    if int(g) > 10000000: obs_filename = str(g) + '-usgs-hourly.csv'
-    else: obs_filename = '0' + str(g) + '-usgs-hourly.csv'
-    obs_file = os.path.join(obs_dir,obs_filename)
+    obs_filename = f'{g_str}-usgs-hourly.csv'
+    obs_file_path = os.path.join(obs_dir,obs_filename)
 
-    data = pd.read_csv(obs_file)
+    data = pd.read_csv(obs_file_path)
     obs_data = data['QObs_CAMELS(mm/h)'].values
     eval_dates = data['date'].values
 
     # define calibration period for usgs streamflow obs.
-    cal_start_idx_usgs = np.where(eval_dates=='2002-10-01 00:00:00')
-    cal_end_idx_usgs = np.where(eval_dates=='2007-09-30 23:00:00')
+    cal_start_idx_usgs = np.where(eval_dates==time_split["testing"]["start_datetime"])
+    cal_end_idx_usgs = np.where(eval_dates==time_split["testing"]["end_datetime"])
     eval_dates = eval_dates[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
     obs_data = obs_data[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
     
@@ -246,12 +256,10 @@ for i in range(0, 1):
     plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='lower right', bbox_to_anchor=(0.5, 0.5,0.5,0.5))
     textstr = '\n'.join((f"The KGE value is : {round(kge[0],4)}.",f"The NSE value is : {round(nse[0],4)}."))
     ax1.text(0.98, 0.45, textstr, transform=ax1.transAxes, fontsize=20,verticalalignment='center',horizontalalignment='right',bbox=dict(facecolor='white', alpha=0.5))
-    plt.title(f"Simulated Streamflow against Observation in the Validation Period [ID: 0{g}]", fontsize = 28)
+    plt.title(f"Simulated Streamflow against Observation in the Validation Period [ID: 0{g_str}]", fontsize = 28)
     plt.tight_layout()
 
-    validation_imgname = str(g) + "_validation_" +str(N) + ".png"
-    validation_imgdir = os.path.join(png_dir,"Validation")
-    if os.path.exists(validation_imgdir)==False: os.mkdir(validation_imgdir)
+    validation_imgname = str(g_str) + "_validation.png"
     validation_imgfile = os.path.join(validation_imgdir,validation_imgname)
     
     plt.savefig(validation_imgfile,bbox_inches='tight')
@@ -260,7 +268,7 @@ for i in range(0, 1):
     print(f"The KGE value is : {kge}.")
     print(f"The NSE value is : {nse}.")
 
-    performance_values["basin_id"].append(g)
+    performance_values["basin_id"].append(g_str)
     performance_values["kge_values"].append(kge)
     performance_values["nse_values"].append(nse)
 
@@ -268,4 +276,4 @@ for i in range(0, 1):
 
 # Save performance dict
 df = pd.DataFrame(performance_values)
-df.to_csv("cfe_validation_performance_values.csv")
+df.to_csv(os.path.join(test_dir, "cfe_validation_performance_values.csv"))
