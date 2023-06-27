@@ -56,7 +56,7 @@ config_dir = r'.\configs'
 # define basin list dir
 basin_dir = r'..\data\camels\gauch_etal_2020'
 basin_filename = 'basin_list_516.txt'
-missgin_data_filename = 'basin_list_missing_data.txt'
+missgin_data_filename = 'basin_list_missing_data_v2023.txt'
 
 # define observation file dir
 obs_dir = r'..\data\camels\gauch_etal_2020\usgs_streamflow'
@@ -110,6 +110,11 @@ best_run_dir = os.path.join(results_path,'best_runs')
 if os.path.exists(best_run_dir)==False: 
     os.mkdir(best_run_dir)
 
+# TODO: add this to Yeham's code #####
+with open('parameter_calibration_bounds.json') as f:
+        parameter_bounds = json.load(f)
+########################################
+
 # ----------------------------------- Setup the Spotpy Class ----------------------------------- #
 class Spotpy_setup(object): 
 
@@ -126,6 +131,7 @@ class Spotpy_setup(object):
         with open(os.path.join(self.config_dir, config_filename)) as data_file:
             data_loaded = json.load(data_file)
 
+        # TODO: add this to Yeham's code #####
         bb_optguess = data_loaded['soil_params']['bb']
         smcmax_optguess = data_loaded['soil_params']["smcmax"]
         satdk_optguess = data_loaded["soil_params"]["satdk"]
@@ -135,23 +141,29 @@ class Spotpy_setup(object):
         cgw_optguess = data_loaded["Cgw"]
         klf_optguess = data_loaded["K_lf"]
         knash_optguess = data_loaded["K_nash"]
+        
+        optguess_dict = {
+            'bb': bb_optguess,
+            'smcmax': smcmax_optguess,
+            'satdk': satdk_optguess,
+            'slop': slop_optguess,
+            'max_gw_storage': maxgw_optguess,
+            'expon': expon_optguess,
+            'Cgw': cgw_optguess,
+            'K_lf': klf_optguess,
+            'K_nash': knash_optguess,
+            'scheme': 1
+        }
 
         # setup calibration parameters
-        self.params = [spotpy.parameter.Uniform('bb',0,21.94,optguess=bb_optguess),
-                       spotpy.parameter.Uniform('smcmax',0.20554,1,optguess = smcmax_optguess), #maybe max = 0.5
-                       spotpy.parameter.Uniform('satdk',0,0.000726,optguess=satdk_optguess),
-                       spotpy.parameter.Uniform('slop',0,1,optguess=slop_optguess),
-                       spotpy.parameter.Uniform('max_gw_storage', 0.01, 0.25,optguess=maxgw_optguess),
-                       spotpy.parameter.Uniform('expon',1,8,optguess=expon_optguess),
-                       spotpy.parameter.Uniform('Cgw',1.8e-6,1.8e-3,optguess=cgw_optguess),
-                       spotpy.parameter.Uniform('K_lf',0,1,optguess=klf_optguess),
-                       spotpy.parameter.Uniform('K_nash',0,1,optguess=knash_optguess), 
-                       spotpy.parameter.Uniform('scheme',0.01,0.99),
-                       #spotpy.parameter.Uniform('mult',10,10000,optguess=1000),
-                       ]
+        self.params = [
+            spotpy.parameter.Uniform(name, details['lower_bound'], details['upper_bound'], optguess=optguess_dict[name])
+            for name, details in parameter_bounds.items()
+        ]
+        
+        ########################################
     
         # Load test comparison data (streamflow) from usgs data
-        
         obs_data0 = pd.read_csv(self.obs_file_path)
         # self.obs_data = obs_data0['QObs_CAMELS(mm/h)'].values # This was daily data
         self.obs_data = obs_data0['QObs(mm/h)'].values # Use hourly data instead
@@ -361,6 +373,10 @@ for i in range(0, max_nbasin_per_loop):
 
     # get best parameters and sim
     best_params = spotpy.analyser.get_best_parameterset(results)
+    
+    # TODO: add this to Yeham's code #####
+    best_param_dict = {name: value for name, value in zip(parameter_bounds.keys(), best_params[0])}
+    ########################################
 
     obj_values = results['like1']
     best_obj_value = np.nanmax(obj_values)
@@ -369,7 +385,7 @@ for i in range(0, max_nbasin_per_loop):
     best_sim = spotpy.analyser.get_modelruns(results[best_idx[0][0]])
     best_sim = np.array([best_sim[i] for i in range(len(best_sim))])
 
-    best_run = {"best parameters": list(best_params[0]),
+    best_run = {"best parameters": best_param_dict,
                 "best objective values": best_obj_value, 
                 "best simulation results": list(best_sim)}
 

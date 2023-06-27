@@ -1,0 +1,42 @@
+{
+    "bb": {
+        "lower_bound": 0,
+        "upper_bound": 21.94
+    },
+    "smcmax": {
+        "lower_bound": 0.20554,
+        "upper_bound": 1
+    },
+    "satdk": {
+        "lower_bound": 0,
+        "upper_bound": 0.000726
+    },
+    "slop": {
+        "lower_bound": 0,
+        "upper_bound": 1
+    },
+    "max_gw_storage": {
+        "lower_bound": 0.01,
+        "upper_bound": 0.25
+    },
+    "expon": {
+        "lower_bound": 1,
+        "upper_bound": 8
+    },
+    "Cgw": {
+        "lower_bound": 1.8e-6,
+        "upper_bound": 1.8e-3
+    },
+    "K_lf": {
+        "lower_bound": 0,
+        "upper_bound": 1
+    },
+    "K_nash": {
+        "lower_bound": 0,
+        "upper_bound": 1
+    },
+    "scheme": {
+        "lower_bound": 0.01,
+        "upper_bound": 0.99
+    }
+}

@@ -21,3 +21,5 @@ dependencies:
   - pip
   - pip:
     - hydra-core
+    - hydroeval
+    - hsclient
