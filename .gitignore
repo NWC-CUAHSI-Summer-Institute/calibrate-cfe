@@ -1,9 +1,9 @@
 _pycache_/*
 configs/*
 results/*
+outputs/*
 
 *.pdf
 *.xlsx
 *.docx
 *.png
-
