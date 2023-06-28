@@ -1,4 +1,5 @@
-# defaults:
+defaults:
+  __self__
 
 io_dir:
   data_dir: ..\data
@@ -10,7 +11,7 @@ io_dir:
   gauch_2020_dir: ..\data\camels\gauch_etal_2020
   ucar_dir: ..\data\camels\ucar
   usgs_streamflow_dir: ..\data\camels\gauch_etal_2020\usgs_streamflow
-  ncar_forcing_dir: ..\data\camels\gauch_etal_2020\nldas_hourly
+  nldas_forcing_dir: ..\data\camels\gauch_etal_2020\nldas_hourly
   basin_dir: ..\data\camels\gauch_etal_2020
 
 model_settings:
