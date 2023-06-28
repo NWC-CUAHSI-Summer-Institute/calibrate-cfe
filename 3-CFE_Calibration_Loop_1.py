@@ -1,19 +1,3 @@
-# import package
-import spotpy
-
-import os
-import sys
-import numpy as np
-import pandas as pd
-import json
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-
-# import the cfe model
-sys.path.append(r'..\cfe_py')
-import bmi_cfe
-import cfe
-
 
 ############################################
 # This code runs calibration (looping through max_nbasin_per_loop basins at a time) #
@@ -23,6 +7,26 @@ import cfe
 # Qiyue Liu (University of Illinois at Urbana-Champaign; qiyuel3@illinois.edu) in 2022 SI
 # Modified by Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI 
 
+
+from omegaconf import DictConfig, OmegaConf
+import hydra
+
+# import package
+import spotpy
+
+import os
+import sys
+import numpy as np
+import pandas as pd
+import json
+import matplotlib.pyplot as plt
+
+# import the cfe model
+sys.path.append(r'..\cfe_py')
+import bmi_cfe
+import cfe
+
+
 # Folder structure
 # project_folder/
 # ├─ data/
@@ -31,95 +35,18 @@ import cfe
 # │  ├─ configs/
 # │  ├─ results/
 
-# ----------------------------------------------------------------------------------- #
-# ----------------------------------- Change here ----------------------------------- #
-## Define iteration number
-# Ideally, N between 1000 to 10000 would be optimal
-# "Algorithms are compared for optimization problems ranging from 6 to 30 dimensions, and each problem is solved in 1000 to 10,000 total function evaluations per optimization trial."
-# N = 500 is recommended by Raven document (https://ravenpy.readthedocs.io/_/downloads/en/latest/pdf/)
-# However, probably for time-limitation, the previous team picked N=100? and probably we will 
-# Reference paper: Tolson, B.A. and Shoemaker, C.A., 2007. Dynamically dimensioned search algorithm for computationally efficient watershed model calibration. Water Resources Research, 43(1)
-# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/algorithms/dds.py
-# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/examples/spot_setup_dds.py
-# Reference code: https://github.com/thouska/spotpy/blob/master/tutorials/tutorial_dds_hymod.py
-# N = 100
-N = 10
-
-# Number of basin to run for a loop
-max_nbasin_per_loop = 1
-
-# If you want to print3 everything
-print_all_process = True
-
-# define config dir
-config_dir = r'.\configs'
-
-# define basin list dir
-basin_dir = r'..\data\camels\gauch_etal_2020'
-basin_filename = 'basin_list_561.txt'
-missgin_data_filename = 'basin_list_missing_data.txt'
-
-# define observation file dir
-obs_dir = r'..\data\camels\gauch_etal_2020\usgs_streamflow'
-
-# define the spinup-calib-val period
-time_split_file = r'..\data\model_common_configs\cal-val-test-period.json'
-# ----------------------------------- Change end ----------------------------------- #
-# ----------------------------------------------------------------------------------- #
-
-# --------------------------------- Load settings  ----------------------------------- #
-# Load basin list
-basin_file = os.path.join(basin_dir,basin_filename)    
-with open(basin_file, 'r') as file:
-    lines = file.readlines()
-    # Remove leading/trailing whitespaces and newline characters
-    lines = [line.strip() for line in lines]
-basin_list_str = lines
-
-# Basin list with missing data -> skipping these
-basin_with_nan_file = os.path.join(basin_dir, missgin_data_filename) 
-with open(basin_with_nan_file, 'r') as file:
-    lines = file.readlines()
-    # Remove leading/trailing whitespaces and newline characters
-    lines = [line.strip() for line in lines]
-missing_data_list = lines
-
-# Load time split file 
-with open(time_split_file, 'r') as file:
-    time_split = json.load(file)
-print(time_split)
-
-# --------------------------------- Setup directories ----------------------------------- #
-
-# define result dir
-results_path = r'.\results'
-if os.path.exists(results_path)==False: 
-    os.mkdir(results_path)
-
-# define raw result dir
-raw_results_path = os.path.join(results_path,'raw')
-if os.path.exists(raw_results_path)==False: 
-    os.mkdir(raw_results_path)
-
-# define dir to save img
-png_dir = os.path.join(results_path,'images')
-if os.path.exists(png_dir)==False: 
-    os.mkdir(png_dir)
-
-# define dir to save best run results and parameters
-best_run_dir = os.path.join(results_path,'best_runs')
-if os.path.exists(best_run_dir)==False: 
-    os.mkdir(best_run_dir)
 
 # ----------------------------------- Setup the Spotpy Class ----------------------------------- #
 class Spotpy_setup(object): 
 
-    def __init__(self, config_dir, obs_file_path, gauge_id, time_split): 
+    def __init__(self, config_dir, obs_file_path, gauge_id, time_split, parameter_bounds, print_all_process): 
         
         self.config_dir = config_dir
         self.time_split = time_split
         self.obs_file_path = obs_file_path
         self.gauge_id = gauge_id
+        self.parameter_bounds = parameter_bounds
+        self.print_all_process = print_all_process
         
         # load original model and soil parameters for optguess from Luciana Cunha
         # locate config file
@@ -127,6 +54,7 @@ class Spotpy_setup(object):
         with open(os.path.join(self.config_dir, config_filename)) as data_file:
             data_loaded = json.load(data_file)
 
+        # TODO: add this to Yeham's code #####
         bb_optguess = data_loaded['soil_params']['bb']
         smcmax_optguess = data_loaded['soil_params']["smcmax"]
         satdk_optguess = data_loaded["soil_params"]["satdk"]
@@ -136,31 +64,37 @@ class Spotpy_setup(object):
         cgw_optguess = data_loaded["Cgw"]
         klf_optguess = data_loaded["K_lf"]
         knash_optguess = data_loaded["K_nash"]
+        
+        optguess_dict = {
+            'bb': bb_optguess,
+            'smcmax': smcmax_optguess,
+            'satdk': satdk_optguess,
+            'slop': slop_optguess,
+            'max_gw_storage': maxgw_optguess,
+            'expon': expon_optguess,
+            'Cgw': cgw_optguess,
+            'K_lf': klf_optguess,
+            'K_nash': knash_optguess,
+            'scheme': 1
+        }
 
         # setup calibration parameters
-        self.params = [spotpy.parameter.Uniform('bb',0,21.94,optguess=bb_optguess),
-                       spotpy.parameter.Uniform('smcmax',0.20554,1,optguess = smcmax_optguess), #maybe max = 0.5
-                       spotpy.parameter.Uniform('satdk',0,0.000726,optguess=satdk_optguess),
-                       spotpy.parameter.Uniform('slop',0,1,optguess=slop_optguess),
-                       spotpy.parameter.Uniform('max_gw_storage', 0.01, 0.25,optguess=maxgw_optguess),
-                       spotpy.parameter.Uniform('expon',1,8,optguess=expon_optguess),
-                       spotpy.parameter.Uniform('Cgw',1.8e-6,1.8e-3,optguess=cgw_optguess),
-                       spotpy.parameter.Uniform('K_lf',0,1,optguess=klf_optguess),
-                       spotpy.parameter.Uniform('K_nash',0,1,optguess=knash_optguess), 
-                       spotpy.parameter.Uniform('scheme',0.01,0.99),
-                       #spotpy.parameter.Uniform('mult',10,10000,optguess=1000),
-                       ]
+        self.params = [
+            spotpy.parameter.Uniform(name, details['lower_bound'], details['upper_bound'], optguess=optguess_dict[name])
+            for name, details in self.parameter_bounds.items()
+        ]
+        
+        ########################################
     
         # Load test comparison data (streamflow) from usgs data
-        
         obs_data0 = pd.read_csv(self.obs_file_path)
         # self.obs_data = obs_data0['QObs_CAMELS(mm/h)'].values # This was daily data
         self.obs_data = obs_data0['QObs(mm/h)'].values # Use hourly data instead
         self.eval_dates = obs_data0['date'].values
 
         # define calibration period for usgs streamflow obs.
-        cal_start_idx_usgs = np.where(self.eval_dates == time_split['calibration']['start_datetime'])
-        cal_end_idx_usgs = np.where(self.eval_dates == time_split['calibration']['end_datetime'])
+        cal_start_idx_usgs = np.where(self.eval_dates == self.time_split['calibration']['start_datetime'])
+        cal_end_idx_usgs = np.where(self.eval_dates == self.time_split['calibration']['end_datetime'])
         self.eval_dates = self.eval_dates[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
         self.obs_data = self.obs_data[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
         
@@ -181,7 +115,7 @@ class Spotpy_setup(object):
             self.forcing_data.rename(columns={"date": "time"}, inplace=True)
             pass
         
-        if print_all_process: 
+        if self.print_all_process: 
             print("### ------------ A NEW ITERATION OF CALIBRATION ------------ ###")
 
         # --------------------------------------- Parameter preparation --------------------------------------- # 
@@ -212,7 +146,7 @@ class Spotpy_setup(object):
         with open(os.path.join(self.config_dir, config_temp_filename), 'w') as out_file:
             json.dump(self.cfe_cfg, out_file)
 
-        if print_all_process: 
+        if self.print_all_process: 
             print(f"###----------- parameters generated: {self.generated_param}.--------###")
 
         # --------------------------------------- Set-up CFE model --------------------------------------- # 
@@ -220,28 +154,28 @@ class Spotpy_setup(object):
         self.cfemodel = bmi_cfe.BMI_CFE(cfg_file=os.path.join(self.config_dir, config_temp_filename))
         self.cfemodel.load_forcing_file = custom_load_forcing_file.__get__(self.cfemodel)
         
-        if print_all_process: 
+        if self.print_all_process: 
             print('###--------model succesfully setup----------###')
         
         self.cfemodel.initialize()
         
-        if print_all_process: 
+        if self.print_all_process: 
             print('###--------model succesfully initialized----------###')
 
         with open(self.cfemodel.forcing_file, 'r') as f:
             self.df_forcing = pd.read_csv(f)
             
-        if print_all_process:
+        if self.print_all_process:
             print(f"###----- forcing_file loaded:{self.cfemodel.forcing_file}. -----###")
 
         # --------------------------------------- Run Spin-up Period --------------------------------------- # 
         
         # define the spin up period
-        spinup_start_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup-for-calibration']['start_datetime'])
-        spinup_end_idx_nldas = np.where(self.df_forcing['date'] == time_split['spinup-for-calibration']['end_datetime'])
+        spinup_start_idx_nldas = np.where(self.df_forcing['date'] == self.time_split['spinup-for-calibration']['start_datetime'])
+        spinup_end_idx_nldas = np.where(self.df_forcing['date'] == self.time_split['spinup-for-calibration']['end_datetime'])
         self.df_forcing_spinup = self.df_forcing.iloc[spinup_start_idx_nldas[0][0]:spinup_end_idx_nldas[0][0]+1,:]
 
-        if print_all_process: 
+        if self.print_all_process: 
             print('###-------- Model Spinning Up... ----------###')
             print('###------spinup start date: ' + self.df_forcing_spinup['date'].values[0]+ "-----###")
             print('###------spinup end date: ' + self.df_forcing_spinup['date'].values[-1]+"-----###")
@@ -264,11 +198,11 @@ class Spotpy_setup(object):
 
         # --------------------------------------- Run Calibration Period --------------------------------------- # 
         # define the calibration period for nldas forcing and usgs streamflow obs.
-        cal_start_idx_nldas = np.where(self.df_forcing['date'] == time_split['calibration']['start_datetime'])
-        cal_end_idx_nldas = np.where(self.df_forcing['date'].values == time_split['calibration']['end_datetime'])
+        cal_start_idx_nldas = np.where(self.df_forcing['date'] ==  self.time_split['calibration']['start_datetime'])
+        cal_end_idx_nldas = np.where(self.df_forcing['date'].values ==  self.time_split['calibration']['end_datetime'])
         self.df_forcing = self.df_forcing.iloc[cal_start_idx_nldas[0][0]:cal_end_idx_nldas[0][0]+1,:]
         
-        if print_all_process:
+        if self.print_all_process:
             print('###-------- Model Running for the Calibration Period ----------###')
             print('###------nldas start date: ' + self.df_forcing['date'].values[0]+ "-----###")
             print('###------nldas end date: ' + self.df_forcing['date'].values[-1]+"-----###")
@@ -294,9 +228,9 @@ class Spotpy_setup(object):
             for output in self.outputs:
                 self.output_lists[output].append(self.cfemodel.get_value(output))
 
-        self.cfemodel.finalize(print_mass_balance=print_all_process)
+        self.cfemodel.finalize(print_mass_balance=self.print_all_process)
 
-        if print_all_process: 
+        if self.print_all_process: 
             print(f'###----------output length: {len(self.output_lists["land_surface_water__runoff_depth"])}.---------###')
 
         self.sim_results = np.array(self.output_lists['land_surface_water__runoff_depth']) * 1000      # m/h -> mm/h
@@ -316,137 +250,226 @@ class Spotpy_setup(object):
 
 
 # ----------------------------------- Loop for Calibration ----------------------------------- #
-
-# Loop through subsets of basins
-for i in range(0, max_nbasin_per_loop):
-
-    # ------------------ Preparation ----------------- ##
-    g_str= basin_list_str[i]
-
-    if print_all_process: 
-        print(f"Processing basin:{g_str}.")
+@hydra.main(version_base=None, config_path="./", config_name="config")
+def main(cfg): 
+    # Read config via hydra
+    print(OmegaConf.to_yaml(cfg))
     
-    if g_str in missing_data_list: 
-        print(f"None or missing usgs streamflow data for basin {g_str}, skipping this basin.") 
-        continue
+    N = cfg.calib_variables.N
 
-    # locate usgs observation file
-    obs_filename = f'{g_str}-usgs-hourly.csv'
-    obs_file_path = os.path.join(obs_dir,obs_filename)
+    # Number of basin to run for a loop
+    max_nbasin_per_loop = cfg.calib_variables.max_nbasin_per_loop
 
-    # set up spotpy class
-    calibration_instance = Spotpy_setup(
-        config_dir=config_dir, 
-        obs_file_path=obs_file_path, 
-        time_split=time_split,
-        gauge_id=g_str
-        )
+    # If you want to print3 everything
+    print_all_process = cfg.calib_variables.print_all_process
 
-    # ------------------ Calibration ----------------- ##
-    # define algorithm and export raw result file name
-    sampler = spotpy.algorithms.dds(calibration_instance, dbname='raw_result_file', dbformat='ram')
+    # define config dir
+    config_dir = cfg.io_dir.config_dir
 
-    # start calibration
-    sampler.sample(N)
+    # define basin list dir
+    basin_dir = cfg.io_dir.gauch_2020_dir
+    basin_filename = cfg.model_settings.basin_file
+    missgin_data_filename = cfg.model_settings.missing_data_file
 
-    # export final results
-    results = sampler.getdata()
+    # define observation file dir
+    obs_dir = cfg.io_dir.usgs_streamflow_dir
 
-    scheme = calibration_instance.cfemodel.surface_partitioning_scheme
-
-    all_result_filename = f'{g_str}_all_results_dds_{scheme}_{str(N)}.npy'
-    all_result_file = os.path.join(raw_results_path,all_result_filename)
-    np.save(all_result_file,results)
-
-    #------------------------------------------ Best parameter and Plots ------------------------------------------#
-
-    # get best parameters and sim
-    best_params = spotpy.analyser.get_best_parameterset(results)
-
-    obj_values = results['like1']
-    best_obj_value = np.nanmax(obj_values)
-    best_idx = np.where(obj_values==best_obj_value)
-
-    best_sim = spotpy.analyser.get_modelruns(results[best_idx[0][0]])
-    best_sim = np.array([best_sim[i] for i in range(len(best_sim))])
-
-    best_run = {"best parameters": list(best_params[0]),
-                "best objective values": best_obj_value, 
-                "best simulation results": list(best_sim)}
-
-    best_run_filename = f'{g_str}_best_run_{scheme}_{str(N)}.json'
-    best_run_file = os.path.join(best_run_dir,best_run_filename)
-
-    with open(best_run_file, 'w', encoding='utf-8') as f:
-        json.dump(best_run, f, ensure_ascii=False, indent=4)
-
-    ### plot parameter trace png ###
-    param_trace_imgname = f'{g_str}_param_trace_{scheme}_{str(N)}.png'
-    param_trace_dir = os.path.join(png_dir,"ParamTrace")
-    if os.path.exists(param_trace_dir)==False: 
-        os.mkdir(param_trace_dir)
-    param_trace_imgfile = os.path.join(param_trace_dir,param_trace_imgname)
-
-    spotpy.analyser.plot_parametertrace(results, fig_name = param_trace_imgfile)
-
-    ### plot objective value trace ###
-    plt.figure(figsize = (18,12))
-    plt.plot(np.arange(0,len(obj_values)), obj_values)
-    #plt.vlines(x=best_idx[0],ymin=-10,ymax=0,colors = 'k',linestyles='dashed')
-    plt.ylim([-2,1])
-    plt.tick_params(axis='x', labelsize= 24)
-    plt.tick_params(axis='y', labelsize= 24)
-    plt.xlabel('Iterations',fontsize = 24)
-    plt.ylabel('KGE Objective Values', fontsize = 24)
-    plt.title("Trace of the Objective Values [KGE]", fontsize = 26)
+    # define the spinup-calib-val period
+    time_split_file = cfg.model_settings.time_split_file
     
-    objvalues_imgname = f'{g_str}_obj_values_{scheme}_{str(N)}.png'
-    objvalues_dir = os.path.join(png_dir,"Obj_Trace")
-    if os.path.exists(objvalues_dir)==False: 
-        os.mkdir(objvalues_dir)
-    objvalues_imgfile = os.path.join(objvalues_dir,objvalues_imgname)
-    plt.savefig(objvalues_imgfile,bbox_inches='tight')
+    results_path = cfg.io_dir.results_dir
+    
+    parameter_bound_file = cfg.model_settings.parameter_bound_file
+        
 
-    ### plot timeseries of simulation vs. observation ##
-    
-    dates = calibration_instance.evaluation(evaldates=True)
-    fig, ax1 = plt.subplots(figsize = (18,12)) 
-    
-    # Plot obs & sim flow 
-    p1, = ax1.plot(dates[0:8760], best_sim[0:8760],'tomato', linewidth = 2, label = "sim")
-    p2, = ax1.plot(dates[0:8760], calibration_instance.obs_data[0:8760], 'k', label = "obs")
-    ax1.set_ylabel('Discharge (mm/h)',fontsize = 24)
-    ax1.set_ylim([0,2])
-    ax1.margins(x=0)
-    ax1.xaxis.set_ticks_position('both')
-    ax1.xaxis.set_label_position('bottom')
-    ax1.tick_params(axis="x",direction="in")
-    
-    # Plot precip
-    ax2 = ax1.twinx()
-    p3, = ax2.plot(dates[0:8760],calibration_instance.df_forcing['total_precipitation'][0:8760],'tab:blue', label = "precip")
-    ax2.set_ylim([50,0])
-    ax2.margins(x=0)
-    #ax2.invert_yaxis()
-    ax2.set_ylabel('Precipitation (mm/h)',fontsize = 24)
-    ax2.set_xlabel('Date', fontsize = 24)
-    ax2.tick_params(axis='x', labelsize= 24)
-    ax2.tick_params(axis='y', labelsize= 24)
-    ax1.tick_params(axis='y', labelsize= 24)
-    
-    plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='right', bbox_to_anchor=(0.5, 0.5, 0.5, 0.5))
-    plt.title(f"Simulated Streamflow against Observation after {N} Iterations of Calibration [ID: {g_str}]", fontsize = 26)
-    plt.tight_layout()
+    # --------------------------------- Load settings  ----------------------------------- #
+    # Load basin list
+    basin_file = os.path.join(basin_filename)    
+    with open(basin_file, 'r') as file:
+        lines = file.readlines()
+        # Remove leading/trailing whitespaces and newline characters
+        lines = [line.strip() for line in lines]
+    basin_list_str = lines
 
-    comparison_imgname = f'{g_str}_comparison_{scheme}_{str(N)}.png'
-    comparison_imgdir = os.path.join(png_dir,"Comparison")
-    if os.path.exists(comparison_imgdir)==False: 
-        os.mkdir(comparison_imgdir)
-    comparison_imgfile = os.path.join(comparison_imgdir,comparison_imgname)
-    plt.savefig(comparison_imgfile,bbox_inches='tight')
+    # Basin list with missing data -> skipping these
+    basin_with_nan_file = os.path.join(missgin_data_filename) 
+    with open(basin_with_nan_file, 'r') as file:
+        lines = file.readlines()
+        # Remove leading/trailing whitespaces and newline characters
+        lines = [line.strip() for line in lines]
+    missing_data_list = lines
 
-    # Finalize 
-    print(f"The best KGE value: {best_obj_value}.")
+    # Load time split file 
+    with open(time_split_file, 'r') as file:
+        time_split = json.load(file)
+    print(time_split)
+
+    # --------------------------------- Setup directories ----------------------------------- #
+
+    # define result dir
+    if os.path.exists(results_path)==False: 
+        os.mkdir(results_path)
+
+    # define raw result dir
+    raw_results_path = os.path.join(results_path,'raw')
+    if os.path.exists(raw_results_path)==False: 
+        os.mkdir(raw_results_path)
+
+    # define dir to save img
+    png_dir = os.path.join(results_path,'images')
+    if os.path.exists(png_dir)==False: 
+        os.mkdir(png_dir)
+
+    # define dir to save best run results and parameters
+    best_run_dir = os.path.join(results_path,'best_runs')
+    if os.path.exists(best_run_dir)==False: 
+        os.mkdir(best_run_dir)
+
+    with open(parameter_bound_file) as f:
+            parameter_bounds = json.load(f)
+            print(parameter_bounds)
+            
+    ########################################
+    
+    # Loop through subsets of basins
+    for i in range(0, max_nbasin_per_loop):
+
+        # ------------------ Preparation ----------------- ##
+        g_str= basin_list_str[i]
+        
+        if g_str in missing_data_list: 
+            print(f"None or missing usgs streamflow data for basin {g_str}, skipping this basin.") 
+            continue
+        else:
+            print(f"Processing basin:{g_str}.")
+
+        # locate usgs observation file
+        obs_filename = f'{g_str}-usgs-hourly.csv'
+        obs_file_path = os.path.join(obs_dir, obs_filename)
+
+        # set up spotpy class
+        calibration_instance = Spotpy_setup(
+            config_dir=config_dir, 
+            obs_file_path=obs_file_path, 
+            time_split=time_split,
+            gauge_id=g_str,
+            parameter_bounds=parameter_bounds,
+            print_all_process=print_all_process
+            )
+
+        # ------------------ Calibration ----------------- ##
+        # define algorithm and export raw result file name
+        sampler = spotpy.algorithms.dds(calibration_instance, dbname='raw_result_file', dbformat='ram')
+
+        # start calibration
+        sampler.sample(N)
+
+        # export final results
+        results = sampler.getdata()
+
+        scheme = calibration_instance.cfemodel.surface_partitioning_scheme
+
+        all_result_filename = f'{g_str}_all_results_dds_{scheme}_{str(N)}.npy'
+        all_result_file = os.path.join(raw_results_path,all_result_filename)
+        np.save(all_result_file,results)
+
+        #------------------------------------------ Best parameter and Plots ------------------------------------------#
+
+        # get best parameters and sim
+        best_params = spotpy.analyser.get_best_parameterset(results)
+        
+        # TODO: add this to Yeham's code #####
+        best_param_dict = {name: value for name, value in zip(parameter_bounds.keys(), best_params[0])}
+        ########################################
+
+        obj_values = results['like1']
+        best_obj_value = np.nanmax(obj_values)
+        best_idx = np.where(obj_values==best_obj_value)
+
+        best_sim = spotpy.analyser.get_modelruns(results[best_idx[0][0]])
+        best_sim = np.array([best_sim[i] for i in range(len(best_sim))])
+
+        best_run = {"best parameters": best_param_dict,
+                    "best objective values": best_obj_value, 
+                    "best simulation results": list(best_sim)}
+
+        best_run_filename = f'{g_str}_best_run_{scheme}_{str(N)}.json'
+        best_run_file = os.path.join(best_run_dir,best_run_filename)
+
+        with open(best_run_file, 'w', encoding='utf-8') as f:
+            json.dump(best_run, f, ensure_ascii=False, indent=4)
+
+        ### plot parameter trace png ###
+        param_trace_imgname = f'{g_str}_param_trace_{scheme}_{str(N)}.png'
+        param_trace_dir = os.path.join(png_dir,"ParamTrace")
+        if os.path.exists(param_trace_dir)==False: 
+            os.mkdir(param_trace_dir)
+        param_trace_imgfile = os.path.join(param_trace_dir,param_trace_imgname)
+
+        spotpy.analyser.plot_parametertrace(results, fig_name = param_trace_imgfile)
+
+        ### plot objective value trace ###
+        plt.figure(figsize = (18,12))
+        plt.plot(np.arange(0,len(obj_values)), obj_values)
+        #plt.vlines(x=best_idx[0],ymin=-10,ymax=0,colors = 'k',linestyles='dashed')
+        plt.ylim([-2,1])
+        plt.tick_params(axis='x', labelsize= 24)
+        plt.tick_params(axis='y', labelsize= 24)
+        plt.xlabel('Iterations',fontsize = 24)
+        plt.ylabel('KGE Objective Values', fontsize = 24)
+        plt.title("Trace of the Objective Values [KGE]", fontsize = 26)
+        
+        objvalues_imgname = f'{g_str}_obj_values_{scheme}_{str(N)}.png'
+        objvalues_dir = os.path.join(png_dir,"Obj_Trace")
+        if os.path.exists(objvalues_dir)==False: 
+            os.mkdir(objvalues_dir)
+        objvalues_imgfile = os.path.join(objvalues_dir,objvalues_imgname)
+        plt.savefig(objvalues_imgfile,bbox_inches='tight')
+
+        ### plot timeseries of simulation vs. observation ##
+        
+        dates = calibration_instance.evaluation(evaldates=True)
+        fig, ax1 = plt.subplots(figsize = (18,12)) 
+        
+        # Plot obs & sim flow 
+        p1, = ax1.plot(dates[0:8760], best_sim[0:8760],'tomato', linewidth = 2, label = "sim")
+        p2, = ax1.plot(dates[0:8760], calibration_instance.obs_data[0:8760], 'k', label = "obs")
+        ax1.set_ylabel('Discharge (mm/h)',fontsize = 24)
+        ax1.set_ylim([0,2])
+        ax1.margins(x=0)
+        ax1.xaxis.set_ticks_position('both')
+        ax1.xaxis.set_label_position('bottom')
+        ax1.tick_params(axis="x",direction="in")
+        
+        # Plot precip
+        ax2 = ax1.twinx()
+        p3, = ax2.plot(dates[0:8760],calibration_instance.df_forcing['total_precipitation'][0:8760],'tab:blue', label = "precip")
+        ax2.set_ylim([50,0])
+        ax2.margins(x=0)
+        #ax2.invert_yaxis()
+        ax2.set_ylabel('Precipitation (mm/h)',fontsize = 24)
+        ax2.set_xlabel('Date', fontsize = 24)
+        ax2.tick_params(axis='x', labelsize= 24)
+        ax2.tick_params(axis='y', labelsize= 24)
+        ax1.tick_params(axis='y', labelsize= 24)
+        
+        plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='right', bbox_to_anchor=(0.5, 0.5, 0.5, 0.5))
+        plt.title(f"Simulated Streamflow against Observation after {N} Iterations of Calibration [ID: {g_str}]", fontsize = 26)
+        plt.tight_layout()
+
+        comparison_imgname = f'{g_str}_comparison_{scheme}_{str(N)}.png'
+        comparison_imgdir = os.path.join(png_dir,"Comparison")
+        if os.path.exists(comparison_imgdir)==False: 
+            os.mkdir(comparison_imgdir)
+        comparison_imgfile = os.path.join(comparison_imgdir,comparison_imgname)
+        plt.savefig(comparison_imgfile,bbox_inches='tight')
+
+        # Finalize 
+        print(f"The best KGE value: {best_obj_value}.")
 
 
 # ----------------------------------- End of Calibration ----------------------------------- #
+
+
+if __name__ == "__main__":
+    main()

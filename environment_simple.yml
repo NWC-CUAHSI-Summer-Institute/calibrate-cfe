@@ -1,0 +1,25 @@
+name: CFE-torch
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.10
+  - numpy
+  - scipy
+  - pandas
+  - jupyterlab
+  - netCDF4
+  - pytorch
+  - scikit-learn
+  - scikit-fuzzy
+  - geopandas
+  - xarray
+  - matplotlib
+  - seaborn
+  - spotpy
+  - pip
+  - pip:
+    - hydra-core
+    - hydroeval
+    - hsclient

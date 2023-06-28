@@ -4,8 +4,10 @@ import pandas as pd
 import json
 import matplotlib.pyplot as plt
 import glob
+import sys
 
 # import the cfe model
+sys.path.append(r'..\cfe_py')
 import bmi_cfe
 import cfe
 
@@ -13,44 +15,58 @@ import cfe
 import hydroeval as he
 
 # define working dir
-working_dir = '/home/ottersloth/cfe_calibration'
-
 # ----------------------------------- Data Loading Dir ----------------------------------- #
-# define basin list dir
-basin_dir = '/home/ottersloth/data/camels_hourly'
-basin_filename = 'basin_list_516.txt'
-basin_file = os.path.join(basin_dir,basin_filename)
-
 # define config dir
-config_dir = os.path.join(working_dir,'configs')
+config_dir = r'.\configs'
+
+# define basin list dir
+basin_dir = r'..\data\camels\gauch_etal_2020'
+basin_filename = 'basin_list_516.txt'
+missgin_data_filename = 'basin_list_missing_data_v2023.txt'
 
 # define observation file dir
-#obs_dir = os.path.join(working_dir,'usgs-streamflow')
-obs_dir = '/home/ottersloth/data/camels_hourly/usgs_streamflow'
+obs_dir = r'..\data\camels\gauch_etal_2020\usgs_streamflow'
 
-# list of basins with missing data -> skipping these
-missing_data_list = ['1552000','1552500','1567500','3338780','7301410','7315700','7346045','8050800','8101000','8104900','8109700','8158810','1187300','1510000','2178400','2196000','2202600','3592718','4197170','6919500','8176900']
+# define the spinup-calib-val period
+time_split_file = r'..\data\model_common_configs\cal-val-test-period.json'
+# ----------------------------------- Change end ----------------------------------- #
+# ----------------------------------------------------------------------------------- #
 
+# --------------------------------- Load settings  ----------------------------------- #
+# Load basin list
+basin_file = os.path.join(basin_dir,basin_filename)    
+with open(basin_file, 'r') as file:
+    lines = file.readlines()
+    # Remove leading/trailing whitespaces and newline characters
+    lines = [line.strip() for line in lines]
+basin_list_str = lines
 
-# ----------------------------------- Saving Results Dir ----------------------------------- #
-# define result dir
-results_path = os.path.join(working_dir,'results')
-if os.path.exists(results_path)==False: os.mkdir(results_path)
+# Basin list with missing data -> skipping these
+basin_with_nan_file = os.path.join(basin_dir, missgin_data_filename) 
+with open(basin_with_nan_file, 'r') as file:
+    lines = file.readlines()
+    # Remove leading/trailing whitespaces and newline characters
+    lines = [line.strip() for line in lines]
+missing_data_list = lines
 
-# define raw result dir
-raw_results_path = os.path.join(results_path,'raw')
-if os.path.exists(raw_results_path)==False: os.mkdir(raw_results_path)
+# Load time split file 
+with open(time_split_file, 'r') as file:
+    time_split = json.load(file)
+print(time_split)
 
-# define dir to save img
+results_path = r'.\results'
 png_dir = os.path.join(results_path,'images')
-if os.path.exists(png_dir)==False: os.mkdir(png_dir)
-
-# define dir to save best run results and parameters
 best_run_dir = os.path.join(results_path,'best_runs')
-if os.path.exists(best_run_dir)==False: os.mkdir(best_run_dir)
 
+validation_imgdir = os.path.join(png_dir,"Testing")
+if os.path.exists(validation_imgdir)==False: 
+    os.mkdir(validation_imgdir)
+    
+test_dir = os.path.join(results_path,"Testing")
+if os.path.exists(test_dir)==False: 
+    os.mkdir(test_dir)
+    
 # define iteration number
-N = 100
 
 # ---------------------------------------- Loop through Validation Period ---------------------------------------- #
 # ---------------------------------- Validation Period: 2002/10/01 - 2007/09/30 ---------------------------------- #
@@ -65,38 +81,75 @@ performance_values["basin_id"] = []
 performance_values["kge_values"] = []
 performance_values["nse_values"] = []
 
+# Setup custom method in BMI-CFE
+def custom_load_forcing_file(self):
+    self.forcing_data = pd.read_csv(self.forcing_file)
+    # Column name change to accomodate NLDAS forcing by https://zenodo.org/record/4072701
+    self.forcing_data.rename(columns={"date": "time"}, inplace=True)
+    pass
+    
+
 # Loop through each basin
-for i in range(basin_list.shape[0]): 
- 
-    g = basin_list[0][i]
+# for i in range(basin_list.shape[0]): 
+for i in range(0, 1): 
+    
+    # ------------------ Preparation ----------------- ##
+    g_str= basin_list_str[i]
 
-    if g in missing_data_list: 
-        print(f"none or missing usgs streamflow data for basin {g}, skipping this basin.") 
+    
+    if g_str in missing_data_list: 
+        print(f"None or missing usgs streamflow data for basin {g_str}, skipping this basin.") 
         continue
+    else:
+        print(f"Processing basin:{g_str}.")
 
-    # locate config file
-    config_filename = 'cat_' + str(g) + '_bmi_config_cfe.json'
-    config_file = os.path.join(config_dir,config_filename)
-
-    # ----------------------------------- Run the Model ----------------------------------- #
-
-    cfemodel = bmi_cfe.BMI_CFE(config_file)
-    print('###--------model succesfully setup----------###')
+    # ------------------ Read the best params from previous file ----------------- ##
 
     # load best parameters found in calibration period
-    best_run_filename = '**/*' + str(g) + '*.*'
+    best_run_filename = '**/*' + str(g_str) + '*.*'
     #best_run_file = os.path.join(best_run_dir,best_run_filename)
     file_list = []
     for files in glob.glob(best_run_dir + best_run_filename):
         file_list.append(files)
 
     with open(file_list[0]) as data_file:
-            data_loaded = json.load(data_file)
+        data_loaded = json.load(data_file)
 
     best_run_params = data_loaded["best parameters"]
+    
+    # locate config file
+    config_filename = 'cat_' + str(g_str) + '_bmi_config_cfe.json'
+    with open(os.path.join(config_dir, config_filename), 'r') as file:
+        cfe_cfg = json.load(file)
+    
+    # Read the template config file 
+    cfe_cfg["soil_params"]['bb'] = best_run_params['bb']
+    cfe_cfg["soil_params"]['smcmax'] = best_run_params['smcmax']
+    cfe_cfg["soil_params"]['satdk'] = best_run_params['satdk']
+    cfe_cfg['slop'] = best_run_params['slop']
+    cfe_cfg['max_gw_storage'] = best_run_params['max_gw_storage']
+    cfe_cfg['expon'] = best_run_params['expon']
+    cfe_cfg['Cgw'] = best_run_params['Cgw']
+    cfe_cfg['K_lf'] = best_run_params['K_lf']
+    cfe_cfg['K_nash'] = best_run_params['K_nash']
+    if best_run_params['scheme'] <= 0.5:
+        cfe_cfg['partition_scheme'] = "Schaake"
+    else:
+        cfe_cfg['partition_scheme'] = "Xinanjiang"
+            
+    # Dump optguess parameter into temporary config file
+    config_temp_filename = f'cat_{g_str}_bmi_config_cfe_temp.json'
+    with open(os.path.join(config_dir, config_temp_filename), 'w') as out_file:
+        json.dump(cfe_cfg, out_file)
+    
+    # ----------------------------------- Run the Model ----------------------------------- #
+
+    # Set up CFE model
+    cfemodel = bmi_cfe.BMI_CFE(cfg_file=os.path.join(config_dir, config_temp_filename))
+    cfemodel.load_forcing_file = custom_load_forcing_file.__get__(cfemodel)
 
     # initialize the model
-    cfemodel.initialize(param_vec = best_run_params)
+    cfemodel.initialize()
     print('###--------model succesfully initialized----------###')
 
     with open(cfemodel.forcing_file, 'r') as f:
@@ -105,8 +158,8 @@ for i in range(basin_list.shape[0]):
 
     # --------------------------------------- Run Spin-up Period --------------------------------------- # 
     # define the spin up period
-    spinup_start_idx_nldas = np.where(df_forcing['date']=='2001-10-01 00:00:00')
-    spinup_end_idx_nldas = np.where(df_forcing['date']=='2002-09-30 23:00:00')
+    spinup_start_idx_nldas = np.where(df_forcing['date']==time_split["spinup-for-testing"]["start_datetime"])
+    spinup_end_idx_nldas = np.where(df_forcing['date']==time_split["spinup-for-testing"]["end_datetime"])
     cfemodel.df_forcing_spinup = df_forcing.iloc[spinup_start_idx_nldas[0][0]:spinup_end_idx_nldas[0][0]+1,:]
 
     print('###-------- model spinning up ----------###')
@@ -129,8 +182,8 @@ for i in range(basin_list.shape[0]):
 
     # --------------------------------------- Rununing for the Validation Period --------------------------------------- #
     # define the calibration period for nldas forcing and usgs streamflow obs.
-    cal_start_idx_nldas = np.where(df_forcing['date']=='2002-10-01 00:00:00')
-    cal_end_idx_nldas = np.where(df_forcing['date']=='2007-09-30 23:00:00')
+    cal_start_idx_nldas = np.where(df_forcing['date']==time_split["testing"]["start_datetime"])
+    cal_end_idx_nldas = np.where(df_forcing['date']==time_split["testing"]["end_datetime"])
     df_forcing = df_forcing.iloc[cal_start_idx_nldas[0][0]:cal_end_idx_nldas[0][0]+1,:]
 
     print('###----- nldas forcing data length: ' +  str(len(df_forcing['date'].values))+"------###")
@@ -153,17 +206,16 @@ for i in range(basin_list.shape[0]):
 
     # ----------------------------------- Evaluate Results ----------------------------------- #
     # Load Observation file
-    if int(g) > 10000000: obs_filename = str(g) + '-usgs-hourly.csv'
-    else: obs_filename = '0' + str(g) + '-usgs-hourly.csv'
-    obs_file = os.path.join(obs_dir,obs_filename)
+    obs_filename = f'{g_str}-usgs-hourly.csv'
+    obs_file_path = os.path.join(obs_dir,obs_filename)
 
-    data = pd.read_csv(obs_file)
+    data = pd.read_csv(obs_file_path)
     obs_data = data['QObs_CAMELS(mm/h)'].values
     eval_dates = data['date'].values
 
     # define calibration period for usgs streamflow obs.
-    cal_start_idx_usgs = np.where(eval_dates=='2002-10-01 00:00:00')
-    cal_end_idx_usgs = np.where(eval_dates=='2007-09-30 23:00:00')
+    cal_start_idx_usgs = np.where(eval_dates==time_split["testing"]["start_datetime"])
+    cal_end_idx_usgs = np.where(eval_dates==time_split["testing"]["end_datetime"])
     eval_dates = eval_dates[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
     obs_data = obs_data[cal_start_idx_usgs[0][0]:cal_end_idx_usgs[0][0]+1]
     
@@ -202,12 +254,10 @@ for i in range(basin_list.shape[0]):
     plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='lower right', bbox_to_anchor=(0.5, 0.5,0.5,0.5))
     textstr = '\n'.join((f"The KGE value is : {round(kge[0],4)}.",f"The NSE value is : {round(nse[0],4)}."))
     ax1.text(0.98, 0.45, textstr, transform=ax1.transAxes, fontsize=20,verticalalignment='center',horizontalalignment='right',bbox=dict(facecolor='white', alpha=0.5))
-    plt.title(f"Simulated Streamflow against Observation in the Validation Period [ID: 0{g}]", fontsize = 28)
+    plt.title(f"Simulated Streamflow against Observation in the Validation Period [ID: 0{g_str}]", fontsize = 28)
     plt.tight_layout()
 
-    validation_imgname = str(g) + "_validation_" +str(N) + ".png"
-    validation_imgdir = os.path.join(png_dir,"Validation")
-    if os.path.exists(validation_imgdir)==False: os.mkdir(validation_imgdir)
+    validation_imgname = str(g_str) + "_validation.png"
     validation_imgfile = os.path.join(validation_imgdir,validation_imgname)
     
     plt.savefig(validation_imgfile,bbox_inches='tight')
@@ -216,7 +266,7 @@ for i in range(basin_list.shape[0]):
     print(f"The KGE value is : {kge}.")
     print(f"The NSE value is : {nse}.")
 
-    performance_values["basin_id"].append(g)
+    performance_values["basin_id"].append(g_str)
     performance_values["kge_values"].append(kge)
     performance_values["nse_values"].append(nse)
 
@@ -224,4 +274,4 @@ for i in range(basin_list.shape[0]):
 
 # Save performance dict
 df = pd.DataFrame(performance_values)
-df.to_csv("cfe_validation_performance_values.csv")
+df.to_csv(os.path.join(test_dir, "cfe_validation_performance_values.csv"))
