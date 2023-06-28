@@ -250,7 +250,7 @@ class Spotpy_setup(object):
 
 
 # ----------------------------------- Loop for Calibration ----------------------------------- #
-@hydra.main(version_base=None, config_path="./", config_name="config")
+@hydra.main(version_base=None, config_path=".", config_name="config")
 def main(cfg): 
     # Read config via hydra
     print(OmegaConf.to_yaml(cfg))
