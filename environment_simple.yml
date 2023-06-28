@@ -18,8 +18,11 @@ dependencies:
   - matplotlib
   - seaborn
   - spotpy
+  - yaml
+  - tqdm
   - pip
   - pip:
     - hydra-core
     - hydroeval
     - hsclient
+    - wget
