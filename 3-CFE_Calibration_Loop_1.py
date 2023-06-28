@@ -359,6 +359,7 @@ def main(cfg):
 
         # ------------------ Calibration ----------------- ##
         # define algorithm and export raw result file name
+        np.random.seed(0)
         sampler = spotpy.algorithms.dds(calibration_instance, dbname='raw_result_file', dbformat='ram')
 
         # start calibration
