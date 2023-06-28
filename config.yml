@@ -1,4 +1,5 @@
-# defaults:
+defaults:
+  __self__
 
 io_dir:
   data_dir: ..\data
