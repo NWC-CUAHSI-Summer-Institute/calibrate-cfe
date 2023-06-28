@@ -1,3 +1,13 @@
+
+############################################
+# This code runs calibration (looping through max_nbasin_per_loop basins at a time) #
+############################################
+
+# Originally written by 2022 team
+# Qiyue Liu (University of Illinois at Urbana-Champaign; qiyuel3@illinois.edu) in 2022 SI
+# Modified by Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI 
+
+
 from omegaconf import DictConfig, OmegaConf
 import hydra
 
@@ -17,14 +27,6 @@ import bmi_cfe
 import cfe
 
 
-############################################
-# This code runs calibration (looping through max_nbasin_per_loop basins at a time) #
-############################################
-
-# Originally written by 2022 team
-# Qiyue Liu (University of Illinois at Urbana-Champaign; qiyuel3@illinois.edu) in 2022 SI
-# Modified by Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI 
-
 # Folder structure
 # project_folder/
 # ├─ data/
@@ -32,19 +34,6 @@ import cfe
 # ├─ calibrate_cfe/
 # │  ├─ configs/
 # │  ├─ results/
-
-# ----------------------------------------------------------------------------------- #
-# ----------------------------------- Change here ----------------------------------- #
-## Define iteration number
-# Ideally, N between 1000 to 10000 would be optimal
-# "Algorithms are compared for optimization problems ranging from 6 to 30 dimensions, and each problem is solved in 1000 to 10,000 total function evaluations per optimization trial."
-# N = 500 is recommended by Raven document (https://ravenpy.readthedocs.io/_/downloads/en/latest/pdf/)
-# However, probably for time-limitation, the previous team picked N=100? and probably we will 
-# Reference paper: Tolson, B.A. and Shoemaker, C.A., 2007. Dynamically dimensioned search algorithm for computationally efficient watershed model calibration. Water Resources Research, 43(1)
-# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/algorithms/dds.py
-# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/examples/spot_setup_dds.py
-# Reference code: https://github.com/thouska/spotpy/blob/master/tutorials/tutorial_dds_hymod.py
-# N = 100
 
 
 # ----------------------------------- Setup the Spotpy Class ----------------------------------- #
@@ -266,7 +255,6 @@ def main(cfg):
     # Read config via hydra
     print(OmegaConf.to_yaml(cfg))
     
-    # N = 10
     N = cfg.calib_variables.N
 
     # Number of basin to run for a loop
@@ -293,8 +281,6 @@ def main(cfg):
     
     parameter_bound_file = cfg.model_settings.parameter_bound_file
         
-    # ----------------------------------- Change end ----------------------------------- #
-    # ----------------------------------------------------------------------------------- #
 
     # --------------------------------- Load settings  ----------------------------------- #
     # Load basin list
@@ -342,6 +328,7 @@ def main(cfg):
     with open(parameter_bound_file) as f:
             parameter_bounds = json.load(f)
             print(parameter_bounds)
+            
     ########################################
     
     # Loop through subsets of basins

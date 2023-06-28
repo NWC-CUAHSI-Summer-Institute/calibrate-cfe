@@ -21,6 +21,15 @@ model_settings:
 
 
 ############## calibration settings ############
+## Define iteration number
+# Ideally, N between 1000 to 10000 would be optimal
+# "Algorithms are compared for optimization problems ranging from 6 to 30 dimensions, and each problem is solved in 1000 to 10,000 total function evaluations per optimization trial."
+# N = 500 is recommended by Raven document (https://ravenpy.readthedocs.io/_/downloads/en/latest/pdf/)
+# Reference paper: Tolson, B.A. and Shoemaker, C.A., 2007. Dynamically dimensioned search algorithm for computationally efficient watershed model calibration. Water Resources Research, 43(1)
+# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/algorithms/dds.py
+# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/examples/spot_setup_dds.py
+# Reference code: https://github.com/thouska/spotpy/blob/master/tutorials/tutorial_dds_hymod.py
+
 calib_variables:
   N: 10
   max_nbasin_per_loop: 1
