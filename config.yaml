@@ -16,6 +16,7 @@ io_dir:
   nldas_forcing_dir: ${cwd}\data\camels\gauch_etal_2020\nldas_hourly
   basin_dir: ${cwd}\data\camels\gauch_etal_2020
   cfe_c_config_dir: ${cwd}\calibrate_cfe\configs\CFE_Config_Cver_from_Luciana
+  hydrofabric_dir: ${cwd}\data\Hydrofabric_RyokoTest
 
 model_settings:
   basin_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_516.txt
