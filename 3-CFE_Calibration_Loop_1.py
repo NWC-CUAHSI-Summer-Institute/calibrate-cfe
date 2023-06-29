@@ -338,7 +338,7 @@ def main(cfg):
 
         # ------------------ Preparation ----------------- ##
         # g_str= basin_list_str[i]
-        g_str = cfgcd .basin_id
+        g_str = cfg.basin_id
         
         if g_str in missing_data_list: 
             print(f"None or missing usgs streamflow data for basin {g_str}, skipping this basin.") 

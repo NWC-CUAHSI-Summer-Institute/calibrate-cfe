@@ -13,7 +13,7 @@ Originally written by 2022 SI team
 
 Modified by 
 - Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI
-
+- Soelem Aafnan Bhuiyan (George Mason University, sbhuiya2@gmu.edu) in 2023 SI
 # Folder structure
 ```
 project_folder/
