@@ -2,8 +2,10 @@
 Code to calibrate CFE model 
 
 # Workflow
-- Run the jupyter notebook in the order of the numbering
-- Run the 3-CFE_Calibration_Loop_1.py with the following command: python 3-CFE_Calibration_Loop_1.py --multirun basin_id="List of your basin IDs separated by comma"
+- Run the jupyter notebook in the order of the numbering until 2-convert_config_files.py
+- Then run the run.sh file as follows -
+	./run.sh /fullpath/toyour/basin_ids.txt
+
 ## Authors 
 Originally written by 2022 SI team
 - Lauren A. Bolotin; San Diego State University; lbolotin3468@sdsu.edu
