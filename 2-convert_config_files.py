@@ -35,9 +35,6 @@ import hydra
 # ----------------------------------- Change here ----------------------------------- #
 #---------------------------- define directories ----------------------------#
 
-# TODO: make this wget from Google Drive ... 
-# Pre-requisits, optguess configs are download to calibrate_cfe/configs/CFE_Config_lumped_Luciana
-
 @hydra.main(version_base=None, config_path=".", config_name="config")
 def main(cfg): 
     
