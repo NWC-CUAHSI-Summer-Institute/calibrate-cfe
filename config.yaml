@@ -39,3 +39,6 @@ calib_variables:
   N: 10
   max_nbasin_per_loop: 1
   print_all_process: False
+
+CFE_config:
+  soil_scheme: ode
