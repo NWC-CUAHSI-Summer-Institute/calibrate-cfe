@@ -1,3 +1,4 @@
+# %%
 import pandas as pd
 import numpy as np
 import os
@@ -7,6 +8,10 @@ import re
 
 from omegaconf import DictConfig, OmegaConf
 import hydra
+
+# %%
+
+# %%
 
 ############################################
 # This code creates CFE config files from Python-version 
@@ -164,6 +169,8 @@ def main(cfg):
 
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(dict_json, f, ensure_ascii=False, indent=4, separators=(',', ':'))
+            
+# Check how many configs are generated
             
 if __name__ == "__main__":
     main()

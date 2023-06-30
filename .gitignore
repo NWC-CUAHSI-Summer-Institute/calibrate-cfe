@@ -2,8 +2,11 @@ _pycache_/*
 configs/*
 results/*
 outputs/*
+multirun/*
 
 *.pdf
 *.xlsx
 *.docx
 *.png
+*.log
+
