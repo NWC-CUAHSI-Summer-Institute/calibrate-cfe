@@ -1,12 +1,12 @@
-defaults:
-  - _self_
-  - override hydra\launcher: joblib
+# defaults:
+#   - _self_
+#   - override hydra\launcher: joblib
 
 cwd: G:\Shared drives\SI_NextGen_Aridity
 
 io_dir:
   data_dir: ${cwd}\data
-  config_dir: ${cwd}\calibrate_cfe\configs
+  config_dir: ${cwd}\calibrate_cfe\configs\soil_ode
   results_dir: ${cwd}\calibrate_cfe\results
   cfe_dir: ${cwd}\cfe_py
   model_config_dir: ${cwd}\data\model_common_configs
@@ -20,7 +20,7 @@ io_dir:
 
 model_settings:
   basin_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_516.txt
-  missing_data_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_missing_data.txt
+  missing_data_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_missing_data_v2023.txt
   time_split_file: ${cwd}\data\model_common_configs\cal-val-test-period.json
   parameter_bound_file: ${cwd}\data\model_common_configs\CFE_parameter_bounds.json
 
@@ -30,9 +30,6 @@ model_settings:
 # "Algorithms are compared for optimization problems ranging from 6 to 30 dimensions, and each problem is solved in 1000 to 10,000 total function evaluations per optimization trial."
 # N = 500 is recommended by Raven document (https:\\ravenpy.readthedocs.io\_\downloads\en\latest\pdf\)
 # Reference paper: Tolson, B.A. and Shoemaker, C.A., 2007. Dynamically dimensioned search algorithm for computationally efficient watershed model calibration. Water Resources Research, 43(1)
-# Reference code: https:\\github.com\thouska\spotpy\blob\master\src\spotpy\algorithms\dds.py
-# Reference code: https:\\github.com\thouska\spotpy\blob\master\src\spotpy\examples\spot_setup_dds.py
-# Reference code: https:\\github.com\thouska\spotpy\blob\master\tutorials\tutorial_dds_hymod.py
 
 calib_variables:
   N: 10
@@ -40,6 +37,6 @@ calib_variables:
   print_all_process: False
 
 CFE_config:
-  soil_scheme: ode
+  soil_scheme: classic
 
 basin_id: ???
