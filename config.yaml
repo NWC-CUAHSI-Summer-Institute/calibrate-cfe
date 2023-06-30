@@ -1,37 +1,38 @@
 defaults:
   - _self_
-  - override hydra/launcher: joblib
+  - override hydra\launcher: joblib
 
-cwd: /scratch/sbhuiya2/SI2023
+cwd: G:\Shared drives\SI_NextGen_Aridity
 
 io_dir:
-  data_dir: ${cwd}/data
-  config_dir: ${cwd}/calibrate-cfe/configs
-  results_dir: ${cwd}/calibrate-cfe/results
-  cfe_dir: ${cwd}/cfe_py
-  model_config_dir: ${cwd}/data/model_common_configs
-  camels_dir: ${cwd}/data/camels
-  gauch_2020_dir: ${cwd}/data/camels/gauch_etal_2020
-  ucar_dir: ${cwd}/data/camels/ucar
-  usgs_streamflow_dir: ${cwd}/data/camels/gauch_etal_2020/usgs_streamflow
-  nldas_forcing_dir: ${cwd}/data/camels/gauch_etal_2020/nldas_hourly
-  basin_dir: ${cwd}/data/camels/gauch_etal_2020
+  data_dir: ${cwd}\data
+  config_dir: ${cwd}\calibrate_cfe\configs
+  results_dir: ${cwd}\calibrate_cfe\results
+  cfe_dir: ${cwd}\cfe_py
+  model_config_dir: ${cwd}\data\model_common_configs
+  camels_dir: ${cwd}\data\camels
+  gauch_2020_dir: ${cwd}\data\camels\gauch_etal_2020
+  ucar_dir: ${cwd}\data\camels\ucar
+  usgs_streamflow_dir: ${cwd}\data\camels\gauch_etal_2020\usgs_streamflow
+  nldas_forcing_dir: ${cwd}\data\camels\gauch_etal_2020\nldas_hourly
+  basin_dir: ${cwd}\data\camels\gauch_etal_2020
+  cfe_c_config_dir: ${cwd}\calibrate_cfe\configs\CFE_Config_Cver_from_Luciana
 
 model_settings:
-  basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_5.txt
-  missing_data_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data.txt
-  time_split_file: ${cwd}/data/model_common_configs/cal-val-test-period.json
-  parameter_bound_file: ${cwd}/data/model_common_configs/CFE_parameter_bounds.json
+  basin_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_516.txt
+  missing_data_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_missing_data.txt
+  time_split_file: ${cwd}\data\model_common_configs\cal-val-test-period.json
+  parameter_bound_file: ${cwd}\data\model_common_configs\CFE_parameter_bounds.json
 
 ############## calibration settings ############
 ## Define iteration number
 # Ideally, N between 1000 to 10000 would be optimal
 # "Algorithms are compared for optimization problems ranging from 6 to 30 dimensions, and each problem is solved in 1000 to 10,000 total function evaluations per optimization trial."
-# N = 500 is recommended by Raven document (https://ravenpy.readthedocs.io/_/downloads/en/latest/pdf/)
+# N = 500 is recommended by Raven document (https:\\ravenpy.readthedocs.io\_\downloads\en\latest\pdf\)
 # Reference paper: Tolson, B.A. and Shoemaker, C.A., 2007. Dynamically dimensioned search algorithm for computationally efficient watershed model calibration. Water Resources Research, 43(1)
-# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/algorithms/dds.py
-# Reference code: https://github.com/thouska/spotpy/blob/master/src/spotpy/examples/spot_setup_dds.py
-# Reference code: https://github.com/thouska/spotpy/blob/master/tutorials/tutorial_dds_hymod.py
+# Reference code: https:\\github.com\thouska\spotpy\blob\master\src\spotpy\algorithms\dds.py
+# Reference code: https:\\github.com\thouska\spotpy\blob\master\src\spotpy\examples\spot_setup_dds.py
+# Reference code: https:\\github.com\thouska\spotpy\blob\master\tutorials\tutorial_dds_hymod.py
 
 calib_variables:
   N: 10
@@ -40,6 +41,5 @@ calib_variables:
 
 CFE_config:
   soil_scheme: ode
-  
-=======
+
 basin_id: ???
