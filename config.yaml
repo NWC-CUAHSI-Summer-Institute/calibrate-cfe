@@ -38,10 +38,8 @@ calib_variables:
   max_nbasin_per_loop: 1
   print_all_process: False
 
-<<<<<<< HEAD
 CFE_config:
   soil_scheme: ode
-=======
+  
 =======
 basin_id: ???
->>>>>>> 59398d86393e918f815588691e2a6d29235b52f0
