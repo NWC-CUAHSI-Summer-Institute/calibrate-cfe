@@ -6,7 +6,7 @@ cwd: G:\Shared drives\SI_NextGen_Aridity
 
 io_dir:
   data_dir: ${cwd}\data
-  config_dir: ${cwd}\calibrate_cfe\configs\soil_ode
+  config_dir: ${cwd}\calibrate_cfe\configs
   results_dir: ${cwd}\calibrate_cfe\results
   cfe_dir: ${cwd}\cfe_py
   model_config_dir: ${cwd}\data\model_common_configs
