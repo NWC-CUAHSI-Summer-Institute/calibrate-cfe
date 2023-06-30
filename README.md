@@ -2,7 +2,9 @@
 Code to calibrate CFE model 
 
 # Workflow
-Run the jupyter notebook in the order of the numbering
+- Run the jupyter notebook in the order of the numbering until 2-convert_config_files.py
+- Then run the run.sh file as follows -
+	./run.sh /fullpath/toyour/basin_ids.txt
 
 ## Authors 
 Originally written by 2022 SI team
@@ -13,7 +15,7 @@ Originally written by 2022 SI team
 
 Modified by 
 - Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI
-
+- Soelem Aafnan Bhuiyan (George Mason University, sbhuiya2@gmu.edu) in 2023 SI
 # Folder structure
 ```
 project_folder/
