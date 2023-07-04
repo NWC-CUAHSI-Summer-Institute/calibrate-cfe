@@ -2,13 +2,14 @@ defaults:
   - _self_
   - override hydra/launcher: joblib
 
-cwd: /scratch/sbhuiya2/SI2023
+cwd: /mnt/sdb1/tkb5476/data
+#cwd: /scratch/sbhuiya2/SI2023
 # Win-Ryoko
 # cwd: G:\Shared drives\SI_NextGen_Aridity
 
 io_dir:
   data_dir: ${cwd}/data
-  config_dir: ${cwd}/calibrate-cfe/configs
+  config_dir: ${cwd}/calibrate-cfe/configs/soil_ode
   results_dir: ${cwd}/calibrate-cfe/results
   cfe_dir: ${cwd}/cfe_py
   model_config_dir: ${cwd}/data/model_common_configs
@@ -17,6 +18,9 @@ io_dir:
   ucar_dir: ${cwd}/data/camels/ucar
   usgs_streamflow_dir: ${cwd}/data/camels/gauch_etal_2020/usgs_streamflow
   nldas_forcing_dir: ${cwd}/data/camels/gauch_etal_2020/nldas_hourly
+
+
+
   basin_dir: ${cwd}/data/camels/gauch_etal_2020
   cfe_c_config_dir: ${cwd}/calibrate-cfe/configs/CFE_Config_Cver_from_Luciana
 
@@ -35,7 +39,11 @@ io_dir:
   # cfe_c_config_dir: ${cwd}\calibrate_cfe\configs\CFE_Config_Cver_from_Luciana
 
 model_settings:
+<<<<<<< Updated upstream
   basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_516.txt
+=======
+  basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_561.txt
+>>>>>>> Stashed changes
   missing_data_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_v2023.txt
   time_split_file: ${cwd}/data/model_common_configs/cal-val-test-period.json
   parameter_bound_file: ${cwd}/data/model_common_configs/CFE_parameter_bounds.json
@@ -59,6 +67,6 @@ calib_variables:
   print_all_process: False
 
 CFE_config:
-  soil_scheme: classic
+  soil_scheme: ode
 
 basin_id: ???
