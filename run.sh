@@ -6,10 +6,12 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-# Read the basin_ids from the file and join them with commas
+# Read the first 48 basin_ids from the file
 file_path=$1
-IFS=$'\n' read -d '' -r -a basin_ids < "$file_path"
+mapfile -t basin_ids < <(head -n 48 "$file_path")
+
+# Join the basin_ids with commas
 joined_basin_ids=$(IFS=, ; echo "${basin_ids[*]}")
 
 # Execute the Python script with the joined basin_ids
-python3 3-CFE_Calibration_Loop_1.py --multirun "basin_id=$joined_basin_ids"
+python 3-CFE_Calibration_Loop_1.py --multirun "basin_id=$joined_basin_ids"
