@@ -56,6 +56,7 @@ class Spotpy_setup(object):
         with open(os.path.join(self.config_dir, config_filename)) as data_file:
             data_loaded = json.load(data_file)
 
+        # TODO: add this to Yeham's code #####
         bb_optguess = data_loaded['soil_params']['bb']
         smcmax_optguess = data_loaded['soil_params']["smcmax"]
         satdk_optguess = data_loaded["soil_params"]["satdk"]
@@ -89,7 +90,8 @@ class Spotpy_setup(object):
     
         # Load test comparison data (streamflow) from usgs data
         obs_data0 = pd.read_csv(self.obs_file_path)
-        self.obs_data = obs_data0['QObs(mm/h)'].values # Use hourly data
+        # self.obs_data = obs_data0['QObs_CAMELS(mm/h)'].values # This was daily data
+        self.obs_data = obs_data0['QObs(mm/h)'].values # Use hourly data instead
         self.eval_dates = obs_data0['date'].values
 
         # define calibration period for usgs streamflow obs.
@@ -245,10 +247,7 @@ class Spotpy_setup(object):
             return self.obs_data
 
     def objectivefunction(self, simulation, evaluation, params=None):
-        if sum(np.isnan(evaluation)) == len(evaluation):
-            self.obj_function = np.nan
-        else:
-            self.obj_function = spotpy.objectivefunctions.kge(evaluation[~np.isnan(evaluation)], simulation[~np.isnan(evaluation)])
+        self.obj_function = spotpy.objectivefunctions.kge(evaluation[~np.isnan(evaluation)], simulation[~np.isnan(evaluation)])
         return self.obj_function
 
 
@@ -338,7 +337,7 @@ def main(cfg):
     for i in range(0, max_nbasin_per_loop):
 
         # ------------------ Preparation ----------------- ##
-        
+        # g_str= basin_list_str[i]
         g_str = cfg.basin_id
         
         if g_str in missing_data_list: 
@@ -382,96 +381,95 @@ def main(cfg):
 
         # get best parameters and sim
         best_params = spotpy.analyser.get_best_parameterset(results)
+        
+        # TODO: add this to Yeham's code #####
         best_param_dict = {name: value for name, value in zip(parameter_bounds.keys(), best_params[0])}
+        ########################################
 
         obj_values = results['like1']
+        best_obj_value = np.nanmax(obj_values)
+        best_idx = np.where(obj_values==best_obj_value)
+
+        best_sim = spotpy.analyser.get_modelruns(results[best_idx[0][0]])
+        best_sim = np.array([best_sim[i] for i in range(len(best_sim))])
+
+        best_run = {"best parameters": best_param_dict,
+                    "best objective values": best_obj_value, 
+                    "best simulation results": list(best_sim)}
+
+        best_run_filename = f'{g_str}_best_run_{scheme}_{str(N)}.json'
+        best_run_file = os.path.join(best_run_dir,best_run_filename)
+
+        with open(best_run_file, 'w', encoding='utf-8') as f:
+            json.dump(best_run, f, ensure_ascii=False, indent=4)
+
+        ### plot parameter trace png ###
+        param_trace_imgname = f'{g_str}_param_trace_{scheme}_{str(N)}.png'
+        param_trace_dir = os.path.join(png_dir,"ParamTrace")
+        if os.path.exists(param_trace_dir)==False: 
+            os.makedirs(param_trace_dir)
+        param_trace_imgfile = os.path.join(param_trace_dir,param_trace_imgname)
+
+        spotpy.analyser.plot_parametertrace(results, fig_name = param_trace_imgfile)
+
+        ### plot objective value trace ###
+        plt.figure(figsize = (18,12))
+        plt.plot(np.arange(0,len(obj_values)), obj_values)
+        #plt.vlines(x=best_idx[0],ymin=-10,ymax=0,colors = 'k',linestyles='dashed')
+        plt.ylim([-2,1])
+        plt.tick_params(axis='x', labelsize= 24)
+        plt.tick_params(axis='y', labelsize= 24)
+        plt.xlabel('Iterations',fontsize = 24)
+        plt.ylabel('KGE Objective Values', fontsize = 24)
+        plt.title("Trace of the Objective Values [KGE]", fontsize = 26)
         
-        if np.max(obj_values) == np.nan:
-            print(f"The best objective value is nan, no best parameter found")
-        else:
-            best_obj_value = np.nanmax(obj_values)
-            best_idx = np.where(obj_values==best_obj_value)
+        objvalues_imgname = f'{g_str}_obj_values_{scheme}_{str(N)}.png'
+        objvalues_dir = os.path.join(png_dir,"Obj_Trace")
+        if os.path.exists(objvalues_dir)==False: 
+            os.makedirs(objvalues_dir)
+        objvalues_imgfile = os.path.join(objvalues_dir,objvalues_imgname)
+        plt.savefig(objvalues_imgfile,bbox_inches='tight')
 
-            best_sim = spotpy.analyser.get_modelruns(results[best_idx[0][0]])
-            best_sim = np.array([best_sim[i] for i in range(len(best_sim))])
+        ### plot timeseries of simulation vs. observation ##
+        
+        dates = calibration_instance.evaluation(evaldates=True)
+        fig, ax1 = plt.subplots(figsize = (18,12)) 
+        
+        # Plot obs & sim flow 
+        p1, = ax1.plot(dates[0:8760], best_sim[0:8760],'tomato', linewidth = 2, label = "sim")
+        p2, = ax1.plot(dates[0:8760], calibration_instance.obs_data[0:8760], 'k', label = "obs")
+        ax1.set_ylabel('Discharge (mm/h)',fontsize = 24)
+        ax1.set_ylim([0,2])
+        ax1.margins(x=0)
+        ax1.xaxis.set_ticks_position('both')
+        ax1.xaxis.set_label_position('bottom')
+        ax1.tick_params(axis="x",direction="in")
+        
+        # Plot precip
+        ax2 = ax1.twinx()
+        p3, = ax2.plot(dates[0:8760],calibration_instance.df_forcing['total_precipitation'][0:8760],'tab:blue', label = "precip")
+        ax2.set_ylim([50,0])
+        ax2.margins(x=0)
+        #ax2.invert_yaxis()
+        ax2.set_ylabel('Precipitation (mm/h)',fontsize = 24)
+        ax2.set_xlabel('Date', fontsize = 24)
+        ax2.tick_params(axis='x', labelsize= 24)
+        ax2.tick_params(axis='y', labelsize= 24)
+        ax1.tick_params(axis='y', labelsize= 24)
+        
+        plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='right', bbox_to_anchor=(0.5, 0.5, 0.5, 0.5))
+        plt.title(f"Simulated Streamflow against Observation after {N} Iterations of Calibration [ID: {g_str}]", fontsize = 26)
+        plt.tight_layout()
 
-            best_run = {"best parameters": best_param_dict,
-                        "best objective values": best_obj_value, 
-                        "best simulation results": list(best_sim)}
+        comparison_imgname = f'{g_str}_comparison_{scheme}_{str(N)}.png'
+        comparison_imgdir = os.path.join(png_dir,"Comparison")
+        if os.path.exists(comparison_imgdir)==False: 
+            os.makedirs(comparison_imgdir)
+        comparison_imgfile = os.path.join(comparison_imgdir,comparison_imgname)
+        plt.savefig(comparison_imgfile,bbox_inches='tight')
 
-            best_run_filename = f'{g_str}_best_run_{scheme}_{str(N)}.json'
-            best_run_file = os.path.join(best_run_dir,best_run_filename)
-
-            with open(best_run_file, 'w', encoding='utf-8') as f:
-                json.dump(best_run, f, ensure_ascii=False, indent=4)
-
-            ### plot parameter trace png ###
-            param_trace_imgname = f'{g_str}_param_trace_{scheme}_{str(N)}.png'
-            param_trace_dir = os.path.join(png_dir,"ParamTrace")
-            if os.path.exists(param_trace_dir)==False: 
-                os.makedirs(param_trace_dir)
-            param_trace_imgfile = os.path.join(param_trace_dir,param_trace_imgname)
-
-            spotpy.analyser.plot_parametertrace(results, fig_name = param_trace_imgfile)
-
-            ### plot objective value trace ###
-            plt.figure(figsize = (18,12))
-            plt.plot(np.arange(0,len(obj_values)), obj_values)
-            #plt.vlines(x=best_idx[0],ymin=-10,ymax=0,colors = 'k',linestyles='dashed')
-            plt.ylim([-2,1])
-            plt.tick_params(axis='x', labelsize= 24)
-            plt.tick_params(axis='y', labelsize= 24)
-            plt.xlabel('Iterations',fontsize = 24)
-            plt.ylabel('KGE Objective Values', fontsize = 24)
-            plt.title("Trace of the Objective Values [KGE]", fontsize = 26)
-            
-            objvalues_imgname = f'{g_str}_obj_values_{scheme}_{str(N)}.png'
-            objvalues_dir = os.path.join(png_dir,"Obj_Trace")
-            if os.path.exists(objvalues_dir)==False: 
-                os.makedirs(objvalues_dir)
-            objvalues_imgfile = os.path.join(objvalues_dir,objvalues_imgname)
-            plt.savefig(objvalues_imgfile,bbox_inches='tight')
-
-            ### plot timeseries of simulation vs. observation ##
-            
-            dates = calibration_instance.evaluation(evaldates=True)
-            fig, ax1 = plt.subplots(figsize = (18,12)) 
-            
-            # Plot obs & sim flow 
-            p1, = ax1.plot(dates[0:8760], best_sim[0:8760],'tomato', linewidth = 2, label = "sim")
-            p2, = ax1.plot(dates[0:8760], calibration_instance.obs_data[0:8760], 'k', label = "obs")
-            ax1.set_ylabel('Discharge (mm/h)',fontsize = 24)
-            ax1.set_ylim([0,2])
-            ax1.margins(x=0)
-            ax1.xaxis.set_ticks_position('both')
-            ax1.xaxis.set_label_position('bottom')
-            ax1.tick_params(axis="x",direction="in")
-            
-            # Plot precip
-            ax2 = ax1.twinx()
-            p3, = ax2.plot(dates[0:8760],calibration_instance.df_forcing['total_precipitation'][0:8760],'tab:blue', label = "precip")
-            ax2.set_ylim([50,0])
-            ax2.margins(x=0)
-            #ax2.invert_yaxis()
-            ax2.set_ylabel('Precipitation (mm/h)',fontsize = 24)
-            ax2.set_xlabel('Date', fontsize = 24)
-            ax2.tick_params(axis='x', labelsize= 24)
-            ax2.tick_params(axis='y', labelsize= 24)
-            ax1.tick_params(axis='y', labelsize= 24)
-            
-            plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='right', bbox_to_anchor=(0.5, 0.5, 0.5, 0.5))
-            plt.title(f"Simulated Streamflow against Observation after {N} Iterations of Calibration [ID: {g_str}]", fontsize = 26)
-            plt.tight_layout()
-
-            comparison_imgname = f'{g_str}_comparison_{scheme}_{str(N)}.png'
-            comparison_imgdir = os.path.join(png_dir,"Comparison")
-            if os.path.exists(comparison_imgdir)==False: 
-                os.makedirs(comparison_imgdir)
-            comparison_imgfile = os.path.join(comparison_imgdir,comparison_imgname)
-            plt.savefig(comparison_imgfile,bbox_inches='tight')
-
-            # Finalize 
-            print(f"The best KGE value: {best_obj_value}.")
+        # Finalize 
+        print(f"The best KGE value: {best_obj_value}.")
 
 
 # ----------------------------------- End of Calibration ----------------------------------- #
