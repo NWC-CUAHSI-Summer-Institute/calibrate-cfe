@@ -1,28 +1,30 @@
-# defaults:
-#   - _self_
-#   - override hydra\launcher: joblib
+defaults:
+  - _self_
+  - override hydra\launcher: joblib
 
-# cwd: /scratch/sbhuiya2/SI2023
+cwd: /mnt/sdb1/tkb5476/data
+#cwd: /scratch/sbhuiya2/SI2023
+
 # Win-Ryoko
-cwd: G:\Shared drives\SI_NextGen_Aridity
+# cwd: G:\Shared drives\SI_NextGen_Aridity
 
 io_dir:
-  # data_dir: ${cwd}/data
-  # config_dir: ${cwd}/calibrate-cfe/configs
-  # results_dir: ${cwd}/calibrate-cfe/results
-  # cfe_dir: ${cwd}/cfe_py
-  # model_config_dir: ${cwd}/data/model_common_configs
-  # camels_dir: ${cwd}/data/camels
-  # gauch_2020_dir: ${cwd}/data/camels/gauch_etal_2020
-  # ucar_dir: ${cwd}/data/camels/ucar
-  # usgs_streamflow_dir: ${cwd}/data/camels/gauch_etal_2020/usgs_streamflow
-  # nldas_forcing_dir: ${cwd}/data/camels/gauch_etal_2020/nldas_hourly
-  # basin_dir: ${cwd}/data/camels/gauch_etal_2020
-  # cfe_c_config_dir: ${cwd}/calibrate_cfe/configs/CFE_Config_Cver_from_Luciana
+  data_dir: ${cwd}/data
+  config_dir: ${cwd}/calibrate-cfe/configs/soil_ode
+  results_dir: ${cwd}/calibrate-cfe/results
+  cfe_dir: ${cwd}/cfe_py
+  model_config_dir: ${cwd}/data/model_common_configs
+  camels_dir: ${cwd}/data/camels
+  gauch_2020_dir: ${cwd}/data/camels/gauch_etal_2020
+  ucar_dir: ${cwd}/data/camels/ucar
+  usgs_streamflow_dir: ${cwd}/data/camels/gauch_etal_2020/usgs_streamflow
+  nldas_forcing_dir: ${cwd}/data/camels/gauch_etal_2020/nldas_hourly
+  basin_dir: ${cwd}/data/camels/gauch_etal_2020
+  cfe_c_config_dir: ${cwd}/calibrate-cfe/configs/CFE_Config_Cver_from_Luciana
 
   # Win-Ryoko
   data_dir: ${cwd}\data
-  config_dir: ${cwd}\calibrate_cfe\configs\soil_classic
+  config_dir: ${cwd}\calibrate_cfe\configs
   results_dir: ${cwd}\calibrate_cfe\results
   cfe_dir: ${cwd}\cfe_py
   model_config_dir: ${cwd}\data\model_common_configs
@@ -35,16 +37,16 @@ io_dir:
   cfe_c_config_dir: ${cwd}\calibrate_cfe\configs\CFE_Config_Cver_from_Luciana
 
 model_settings:
-  # basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_5.txt
-  # missing_data_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data.txt
-  # time_split_file: ${cwd}/data/model_common_configs/cal-val-test-period.json
-  # parameter_bound_file: ${cwd}/data/model_common_configs/CFE_parameter_bounds.json
+  basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_516.txt
+  missing_data_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_v2023.txt
+  time_split_file: ${cwd}/data/model_common_configs/cal-val-test-period.json
+  parameter_bound_file: ${cwd}/data/model_common_configs/CFE_parameter_bounds.json
 
   # Win-Ryoko
-  basin_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_516.txt
-  missing_data_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_missing_data_v2023.txt
-  time_split_file: ${cwd}\data\model_common_configs\cal-val-test-period.json
-  parameter_bound_file: ${cwd}\data\model_common_configs\CFE_parameter_bounds.json
+  # basin_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_516.txt
+  # missing_data_file: ${cwd}\data\camels\gauch_etal_2020\basin_list_missing_data_v2023.txt
+  # time_split_file: ${cwd}\data\model_common_configs\cal-val-test-period.json
+  # parameter_bound_file: ${cwd}\data\model_common_configs\CFE_parameter_bounds.json
 
 ############## calibration settings ############
 ## Define iteration number
@@ -54,11 +56,11 @@ model_settings:
 # Reference paper: Tolson, B.A. and Shoemaker, C.A., 2007. Dynamically dimensioned search algorithm for computationally efficient watershed model calibration. Water Resources Research, 43(1)
 
 calib_variables:
-  N: 10
+  N: 500
   max_nbasin_per_loop: 1
   print_all_process: False
 
 CFE_config:
-  soil_scheme: classic
+  soil_scheme: ode
 
 basin_id: ???
