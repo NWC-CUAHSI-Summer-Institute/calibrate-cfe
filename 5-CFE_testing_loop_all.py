@@ -85,15 +85,18 @@ def main(cfg):
 
     png_dir = os.path.join(results_path,'images')
     best_run_dir = os.path.join(results_path,'best_runs')
-
-    validation_imgdir = os.path.join(png_dir, "Testing")
-    if os.path.exists(validation_imgdir)==False: 
-        os.mkdirs(validation_imgdir)
         
     test_dir = os.path.join(results_path, "Testing")
     if os.path.exists(test_dir)==False: 
-        os.mkdirs(test_dir)
+        os.mkdir(test_dir)
         
+    test_imgdir = os.path.join(test_dir, "img")
+    if os.path.exists(test_imgdir)==False: 
+        os.mkdir(test_imgdir)
+        
+    test_runs_dir = os.path.join(test_dir, "runs")
+    if os.path.exists(test_runs_dir)==False: 
+        os.mkdir(test_runs_dir)
 
     # initialize dict to save results
     performance_values = {}
@@ -242,6 +245,18 @@ def main(cfg):
         evaluations = obs_data
         nse = he.evaluator(he.nse, simulations, evaluations)
         kge, r, alpha, beta = he.evaluator(he.kge, simulations, evaluations)
+        
+        # Output the best parameters and timeseries
+        test_run = {
+            'best_params': best_run_params,
+            'start_datetime':time_split["testing"]["start_datetime"],
+            'end_datetime':time_split["testing"]["end_datetime"], 
+            'simulated_Q(mm/h)':simulations.tolist(),
+            }
+        
+        out_filename = f'cat_{g_str}_testrun_results.json'
+        with open(os.path.join(test_runs_dir, out_filename), 'w') as out_file:
+            json.dump(test_run, out_file, indent=4)
 
         # plot sim against obs for the 1st year
         fig, ax1 = plt.subplots(figsize = (18,12)) 
@@ -267,13 +282,13 @@ def main(cfg):
         plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='lower right', bbox_to_anchor=(0.5, 0.5,0.5,0.5))
         textstr = '\n'.join((f"The KGE value is : {round(kge[0],4)}.",f"The NSE value is : {round(nse[0],4)}."))
         ax1.text(0.98, 0.45, textstr, transform=ax1.transAxes, fontsize=20,verticalalignment='center',horizontalalignment='right',bbox=dict(facecolor='white', alpha=0.5))
-        plt.title(f"Simulated Streamflow against Observation in the Validation Period [ID: 0{g_str}]", fontsize = 28)
+        plt.title(f"Simulated Streamflow against Observation in the Testing Period [ID: 0{g_str}]", fontsize = 28)
         plt.tight_layout()
 
-        validation_imgname = str(g_str) + "_validation.png"
-        validation_imgfile = os.path.join(validation_imgdir,validation_imgname)
+        testing_imagename = str(g_str) + "_testing.png"
+        testing_imgfile = os.path.join(test_imgdir,testing_imagename)
         
-        plt.savefig(validation_imgfile,bbox_inches='tight')
+        plt.savefig(testing_imgfile, bbox_inches='tight')
         
         # calculate kge values
         print(f"The KGE value is : {kge}.")
@@ -287,7 +302,7 @@ def main(cfg):
 
     # Save performance dict
     df = pd.DataFrame(performance_values)
-    df.to_csv(os.path.join(test_dir, "cfe_validation_performance_values.csv"))
+    df.to_csv(os.path.join(test_dir, "all_cat_performance_values.csv"))
     
 if __name__ == "__main__":
     main()
