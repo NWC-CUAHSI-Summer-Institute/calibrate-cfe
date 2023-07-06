@@ -243,8 +243,8 @@ def main(cfg):
         # calculate kge values
         simulations = sims
         evaluations = obs_data
-        nse = he.evaluator(he.nse, simulations, evaluations)
-        kge, r, alpha, beta = he.evaluator(he.kge, simulations, evaluations)
+        nse = he.evaluator(he.nse, simulations[~np.isnan(evaluations)], evaluations[~np.isnan(evaluations)])
+        kge, r, alpha, beta = he.evaluator(he.kge, simulations[~np.isnan(evaluations)], evaluations[~np.isnan(evaluations)])
         
         # Output the best parameters and timeseries
         test_run = {
