@@ -106,8 +106,8 @@ def main(cfg):
         
     # define iteration number
         
-    # for i in range(basin_list.shape[0]): 
-    for i in range(0, 1): 
+    for i in range(basin_list.shape[0]): 
+    # for i in range(0, 1):
         
         # ------------------ Preparation ----------------- ##
         g_str= basin_list_str[i]
