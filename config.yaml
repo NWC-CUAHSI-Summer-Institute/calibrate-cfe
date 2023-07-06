@@ -1,6 +1,6 @@
-defaults:
-  - _self_
-  - override hydra\launcher: joblib
+# defaults:
+#   - _self_
+#   - override hydra\launcher: joblib
 
 # cwd: /scratch/sbhuiya2/SI2023
 # Win-Ryoko
@@ -22,7 +22,7 @@ io_dir:
 
   # Win-Ryoko
   data_dir: ${cwd}\data
-  config_dir: ${cwd}\calibrate_cfe\configs
+  config_dir: ${cwd}\calibrate_cfe\configs\soil_classic
   results_dir: ${cwd}\calibrate_cfe\results
   cfe_dir: ${cwd}\cfe_py
   model_config_dir: ${cwd}\data\model_common_configs
