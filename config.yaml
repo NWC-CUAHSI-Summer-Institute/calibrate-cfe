@@ -1,16 +1,16 @@
 defaults:
   - _self_
-  - override hydra/launcher: joblib
+  - override hydra\launcher: joblib
 
-cwd: /mnt/sdb1/tkb5476/data
-#cwd: /scratch/sbhuiya2/SI2023
+# cwd: /mnt/sdb1/tkb5476/data
+cwd: /scratch/sbhuiya2/SI2023
 
 # Win-Ryoko
 # cwd: G:\Shared drives\SI_NextGen_Aridity
 
 io_dir:
   data_dir: ${cwd}/data
-  config_dir: ${cwd}/calibrate-cfe/configs/soil_ode
+  config_dir: ${cwd}/calibrate-cfe/configs
   results_dir: ${cwd}/calibrate-cfe/results
   cfe_dir: ${cwd}/cfe_py
   model_config_dir: ${cwd}/data/model_common_configs
@@ -61,6 +61,6 @@ calib_variables:
   print_all_process: False
 
 CFE_config:
-  soil_scheme: ode
+  soil_scheme: classic
 
 basin_id: ???
