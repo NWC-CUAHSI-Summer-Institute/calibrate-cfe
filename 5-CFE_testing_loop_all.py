@@ -49,7 +49,7 @@ def main(cfg):
     # define basin list dir
     basin_dir = cfg.io_dir.gauch_2020_dir
     basin_filename = cfg.model_settings.basin_file
-    missgin_data_filename = cfg.model_settings.missing_data_file
+    missgin_data_filename = cfg.model_settings.missing_data_file_testing
 
     # define observation file dir
     obs_dir = cfg.io_dir.usgs_streamflow_dir
