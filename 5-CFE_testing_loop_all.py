@@ -49,7 +49,7 @@ def main(cfg):
     # define basin list dir
     basin_dir = cfg.io_dir.gauch_2020_dir
     basin_filename = cfg.model_settings.basin_file
-    missgin_data_filename = cfg.model_settings.missing_data_file
+    missgin_data_filename = cfg.model_settings.missing_data_file_testing
 
     # define observation file dir
     obs_dir = cfg.io_dir.usgs_streamflow_dir
@@ -106,8 +106,8 @@ def main(cfg):
         
     # define iteration number
         
-    # for i in range(basin_list.shape[0]): 
-    for i in range(0, 1): 
+    for i in range(basin_list.shape[0]): 
+    # for i in range(0, 1):
         
         # ------------------ Preparation ----------------- ##
         g_str= basin_list_str[i]
@@ -243,8 +243,8 @@ def main(cfg):
         # calculate kge values
         simulations = sims
         evaluations = obs_data
-        nse = he.evaluator(he.nse, simulations, evaluations)
-        kge, r, alpha, beta = he.evaluator(he.kge, simulations, evaluations)
+        nse = he.evaluator(he.nse, simulations[~np.isnan(evaluations)], evaluations[~np.isnan(evaluations)])
+        kge, r, alpha, beta = he.evaluator(he.kge, simulations[~np.isnan(evaluations)], evaluations[~np.isnan(evaluations)])
         
         # Output the best parameters and timeseries
         test_run = {

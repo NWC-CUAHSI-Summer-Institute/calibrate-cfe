@@ -39,6 +39,7 @@ io_dir:
 model_settings:
   basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_516.txt
   missing_data_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_v2023.txt
+  missing_data_file_testing: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_testing_period_v2023.txt
   time_split_file: ${cwd}/data/model_common_configs/cal-val-test-period.json
   parameter_bound_file: ${cwd}/data/model_common_configs/CFE_parameter_bounds.json
 
