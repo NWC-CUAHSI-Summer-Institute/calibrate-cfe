@@ -226,7 +226,7 @@ def main(cfg):
         obs_file_path = os.path.join(obs_dir,obs_filename)
 
         data = pd.read_csv(obs_file_path)
-        obs_data = data['QObs_CAMELS(mm/h)'].values
+        obs_data = data['QObs(mm/h)'].values
         eval_dates = data['date'].values
 
         # define calibration period for usgs streamflow obs.
