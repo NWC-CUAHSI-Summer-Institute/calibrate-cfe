@@ -22,7 +22,7 @@ from omegaconf import DictConfig, OmegaConf
 import hydra
 
 # import the cfe model
-sys.path.append(r'..\cfe_py')
+sys.path.append(r'../cfe_py')
 import bmi_cfe
 import cfe
 

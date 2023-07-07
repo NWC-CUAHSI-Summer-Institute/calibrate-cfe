@@ -8,7 +8,7 @@ fi
 
 # Read the first 48 basin_ids from the file
 file_path=$1
-mapfile -t basin_ids < <(head -n 48 "$file_path")
+mapfile -t basin_ids < <(head -n 516 "$file_path")
 
 # Join the basin_ids with commas
 joined_basin_ids=$(IFS=, ; echo "${basin_ids[*]}")
