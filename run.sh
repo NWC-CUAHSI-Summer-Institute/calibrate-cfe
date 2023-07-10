@@ -14,4 +14,4 @@ mapfile -t basin_ids < <(head -n 516 "$file_path")
 joined_basin_ids=$(IFS=, ; echo "${basin_ids[*]}")
 
 # Execute the Python script with the joined basin_ids
-python 3-CFE_Calibration_Loop_1.py --multirun "basin_id=$joined_basin_ids"
+python 3-CFE_calibration_loop_1.py --multirun "basin_id=$joined_basin_ids"

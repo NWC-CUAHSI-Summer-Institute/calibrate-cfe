@@ -3,6 +3,7 @@ configs/*
 results/*
 outputs/*
 multirun/*
+drafts/*
 
 *.pdf
 *.xlsx

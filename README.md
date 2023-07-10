@@ -7,15 +7,19 @@ Code to calibrate CFE model
 	./run.sh /fullpath/toyour/basin_ids.txt
 
 ## Authors 
-Originally written by 2022 SI team
-- Lauren A. Bolotin; San Diego State University; lbolotin3468@sdsu.edu
-- Francisco Haces-Garcia; University of Houston; fhacesgarcia@uh.edu
-- Mochi Liao; Duke University; mochi.liao@duke.edu
-- Qiyue Liu; University of Illinois at Urbana-Champaign; qiyuel3@illinois.edu
+Modified by 2023 SI team
+- Ryoko Araki (San Diego State University & University of California, Santa Barbara, @ry4git)
+- Soelem Aafnan Bhuiyan (George Mason University, Fairfax, Virginia @soelemaafnan)
+- Tadd Bindas (Penn State University, University Park, Pennsylvania, @taddyb)
+- Jeremy Rapp (Michigan State University, East Lansing, Michigan @rappjer1)
 
-Modified by 
-- Ryoko Araki (San Diego State University & UCSB, raraki8159@sdsu.edu) in 2023 SI
-- Soelem Aafnan Bhuiyan (George Mason University, sbhuiya2@gmu.edu) in 2023 SI
+Originally written by 2022 SI team
+- Lauren A. Bolotin; San Diego State University
+- Francisco Haces-Garcia; University of Houston
+- Mochi Liao; Duke University
+- Qiyue Liu; University of Illinois at Urbana-Champaign
+
+
 # Folder structure
 ```
 project_folder/
