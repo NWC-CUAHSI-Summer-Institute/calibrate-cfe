@@ -4,6 +4,13 @@
 #  Summary
 This codes calibrate [CFE model in Python version](https://github.com/NWC-CUAHSI-Summer-Institute/cfe_py), with all the pipelines set up. 
 
+# Installation 
+Use conda to create your own env based on our ```environment.yml``` file
+```
+conda env create -f environment.yml
+conda activate CFE
+```
+
 # To run this codes
 0. Create your own config file using ```example_config.yaml``` and name it as ```config.yaml```
 1. Run ```0-create_config_files.ipynb``` to generate model time-splitting and parameter bound files. Make any changes if you need 
@@ -17,6 +24,17 @@ This codes calibrate [CFE model in Python version](https://github.com/NWC-CUAHSI
 6. Visualization code is in development
 7. Notebooks with names starting from ```99-``` is from 2022 team to execute model selection using random forest. Contact Francisco Haces-Garcia for the details. 
 
+# Folder structure
+If you want to completely follow the example_config.yaml file, the following folder structure will be build while going through the pipeline. 
+```
+project_folder/
+├─ data/
+├─ cfe_py/
+├─ calibrate_cfe/
+│  ├─ configs/
+│  ├─ results/
+```
+
 ## Authors 
 Modified by 2023 SI team
 - Ryoko Araki (San Diego State University & University of California, Santa Barbara, @ry4git)
@@ -29,13 +47,3 @@ Build upon the scripts by 2022 SI team
 - Francisco Haces-Garcia; University of Houston
 - Mochi Liao; Duke University
 - Qiyue Liu; University of Illinois at Urbana-Champaign
-
-# Folder structure
-```
-project_folder/
-├─ data/
-├─ cfe_py/
-├─ calibrate_cfe/
-│  ├─ configs/
-│  ├─ results/
-```
