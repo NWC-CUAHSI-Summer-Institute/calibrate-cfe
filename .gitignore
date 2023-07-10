@@ -3,6 +3,7 @@ configs/*
 results/*
 outputs/*
 multirun/*
+drafts/*
 
 *.pdf
 *.xlsx
@@ -10,3 +11,8 @@ multirun/*
 *.png
 *.log
 
+.ipynb_checkpoints/*
+__pycache__/*
+.idea/*
+
+config.yaml

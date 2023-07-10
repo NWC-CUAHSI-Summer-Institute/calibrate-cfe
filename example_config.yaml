@@ -1,0 +1,49 @@
+####### CHANGE TO MAKE #######
+# 1. Point cwd, io_dir, and model_settings to your desired directory
+# 2. For Windows, make sure to switch the forward to backward slash
+# You may need to change the hydra/launcher slash on line 8 of "3-CFE_calibration_loop_1.py" if you're getting an error about not finding the joblib
+# 3. Choose the "soil_scheme" between 'ode' or 'classic'
+
+defaults:
+  - _self_
+  - override hydra/launcher: joblib
+
+cwd: # Change to your directory
+
+io_dir:
+  data_dir: ${cwd}/data # This holds all the forcing and evaluation data
+  config_dir: ${cwd}/calibrate-cfe/configs # This holds config files
+  results_dir: ${cwd}/calibrate-cfe/results # This holds results
+  cfe_dir: ${cwd}/cfe_py # This holds cfe_py models cloned from github 
+  model_config_dir: ${cwd}/data/model_common_configs # This holds model configuration files (time-splitting and CFE parameter bounds)
+  camels_dir: ${cwd}/data/camels # This holds camels data
+  gauch_2020_dir: ${cwd}/data/camels/gauch_etal_2020 # This holds camels data downloaded from Gauch et al., 2020
+  ucar_dir: ${cwd}/data/camels/ucar 
+  usgs_streamflow_dir: ${cwd}/data/camels/gauch_etal_2020/usgs_streamflow
+  nldas_forcing_dir: ${cwd}/data/camels/gauch_etal_2020/nldas_hourly
+  basin_dir: ${cwd}/data/camels/gauch_etal_2020
+  cfe_c_config_dir: ${cwd}/calibrate-cfe/configs/CFE_Config_Cver_from_Luciana
+
+model_settings:
+  basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_561.txt
+  missing_data_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_v2023.txt
+  missing_data_file_testing: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_testing_period_v2023.txt
+  time_split_file: ${cwd}/data/model_common_configs/cal-val-test-period.json
+  parameter_bound_file: ${cwd}/data/model_common_configs/CFE_parameter_bounds.json
+
+############## calibration settings ############
+## Define iteration number
+# Ideally, N between 1000 to 10000 would be optimal
+# "Algorithms are compared for optimization problems ranging from 6 to 30 dimensions, and each problem is solved in 1000 to 10,000 total function evaluations per optimization trial."
+# N = 500 is recommended by Raven document (https:\\ravenpy.readthedocs.io\_\downloads\en\latest\pdf\)
+# Reference paper: Tolson, B.A. and Shoemaker, C.A., 2007. Dynamically dimensioned search algorithm for computationally efficient watershed model calibration. Water Resources Research, 43(1)
+
+calib_variables:
+  N: 500
+  max_nbasin_per_loop: 1
+  print_all_process: False
+
+CFE_config:
+  soil_scheme: classic
+
+basin_id: ???
