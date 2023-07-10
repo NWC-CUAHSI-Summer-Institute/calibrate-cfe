@@ -88,7 +88,7 @@ def main(cfg):
     png_dir = os.path.join(results_path,'images')
     best_run_dir = os.path.join(results_path,'best_runs')
         
-    test_dir = os.path.join(results_path, "Test_run_with_best_calibrated_param")
+    test_dir = os.path.join(results_path, "Test_run_with_the_best_param")
     if os.path.exists(test_dir)==False: 
         os.mkdir(test_dir)
         
@@ -108,7 +108,8 @@ def main(cfg):
         
     # define iteration number
         
-    for i in range(basin_list.shape[0]): 
+    for i in range(basin_list.shape[0]):
+    # for i in range(0, 1): 
         
         # ------------------ Preparation ----------------- ##
         g_str= basin_list_str[i]
@@ -124,13 +125,13 @@ def main(cfg):
 
         # load best parameters found in calibration period
         best_run_filename = f'{g_str}_best_run.json'
-        #best_run_file = os.path.join(best_run_dir,best_run_filename)
-        file_list = []
-        for files in glob.glob(best_run_dir + best_run_filename):
-            file_list.append(files)
-
-        with open(file_list[0]) as data_file:
-            data_loaded = json.load(data_file)
+        best_run_file = os.path.join(best_run_dir,best_run_filename)
+        if os.path.exists(best_run_file):
+            with open(best_run_file) as data_file:
+                data_loaded = json.load(data_file)
+        else:
+            print(f'Missing best parameter file from the gauge_id {g_str}')
+            continue
 
         best_run_params = data_loaded["best parameters"]
         
@@ -283,7 +284,7 @@ def main(cfg):
         plt.legend(handles = [p1,p2,p3],fontsize = 24, loc='lower right', bbox_to_anchor=(0.5, 0.5,0.5,0.5))
         textstr = '\n'.join((f"The KGE value is : {round(kge[0],4)}.",f"The NSE value is : {round(nse[0],4)}."))
         ax1.text(0.98, 0.45, textstr, transform=ax1.transAxes, fontsize=20,verticalalignment='center',horizontalalignment='right',bbox=dict(facecolor='white', alpha=0.5))
-        plt.title(f"Simulated Streamflow against Observation in the Testing Period [ID: 0{g_str}]", fontsize = 28)
+        plt.title(f"Simulated Streamflow against Observation in the Testing Period [ID: {g_str}]", fontsize = 28)
         plt.tight_layout()
 
         testing_imagename = str(g_str) + "_testing.png"
