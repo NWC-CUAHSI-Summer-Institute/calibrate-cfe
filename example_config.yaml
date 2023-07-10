@@ -1,6 +1,8 @@
-# CHANGE TO MAKE
-# Point cwd, io_dir, and model_settings to your desired directory
-# For Windows, make sure to switch the forward to backward slash
+####### CHANGE TO MAKE #######
+# 1. Point cwd, io_dir, and model_settings to your desired directory
+# 2. For Windows, make sure to switch the forward to backward slash
+# You may need to change the hydra/launcher slash on line 8 of "3-CFE_calibration_loop_1.py" if you're getting an error about not finding the joblib
+# 3. Choose the "soil_scheme" between 'ode' or 'classic'
 
 defaults:
   - _self_
