@@ -10,9 +10,12 @@ defaults:
 
 cwd: # Change to your directory
 
+CFE_config:
+  soil_scheme: classic
+
 io_dir:
   data_dir: ${cwd}/data # This holds all the forcing and evaluation data
-  config_dir: ${cwd}/calibrate-cfe/configs # This holds config files
+  config_dir: ${cwd}/calibrate-cfe/configs/soil_{$CFE_config.soil_scheme} # This holds config files
   results_dir: ${cwd}/calibrate-cfe/results # This holds results
   cfe_dir: ${cwd}/cfe_py # This holds cfe_py models cloned from github 
   model_config_dir: ${cwd}/data/model_common_configs # This holds model configuration files (time-splitting and CFE parameter bounds)
@@ -25,7 +28,7 @@ io_dir:
   cfe_c_config_dir: ${cwd}/calibrate-cfe/configs/CFE_Config_Cver_from_Luciana
 
 model_settings:
-  basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_561.txt
+  basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_516.txt
   missing_data_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_v2023.txt
   missing_data_file_testing: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_testing_period_v2023.txt
   time_split_file: ${cwd}/data/model_common_configs/cal-val-test-period.json
@@ -42,8 +45,5 @@ calib_variables:
   N: 500
   max_nbasin_per_loop: 1
   print_all_process: False
-
-CFE_config:
-  soil_scheme: classic
 
 basin_id: ???
