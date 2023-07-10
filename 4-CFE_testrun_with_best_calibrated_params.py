@@ -22,7 +22,9 @@ from omegaconf import DictConfig, OmegaConf
 import hydra
 
 # import the cfe model
-sys.path.append(r'../cfe_py')
+from pathlib import Path
+cfe_py_path = Path(__file__).resolve().parent.parent / 'cfe_py'
+sys.path.append(str(cfe_py_path))
 import bmi_cfe
 import cfe
 
@@ -86,7 +88,7 @@ def main(cfg):
     png_dir = os.path.join(results_path,'images')
     best_run_dir = os.path.join(results_path,'best_runs')
         
-    test_dir = os.path.join(results_path, "Testing")
+    test_dir = os.path.join(results_path, "Test_run_with_best_calibrated_param")
     if os.path.exists(test_dir)==False: 
         os.mkdir(test_dir)
         
@@ -107,7 +109,6 @@ def main(cfg):
     # define iteration number
         
     for i in range(basin_list.shape[0]): 
-    # for i in range(0, 1):
         
         # ------------------ Preparation ----------------- ##
         g_str= basin_list_str[i]
@@ -122,7 +123,7 @@ def main(cfg):
         # ------------------ Read the best params from previous file ----------------- ##
 
         # load best parameters found in calibration period
-        best_run_filename = '**/*' + str(g_str) + '*.*'
+        best_run_filename = f'{g_str}_best_run.json'
         #best_run_file = os.path.join(best_run_dir,best_run_filename)
         file_list = []
         for files in glob.glob(best_run_dir + best_run_filename):
