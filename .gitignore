@@ -10,3 +10,9 @@ multirun/*
 *.png
 *.log
 
+.ipynb_checkpoints/*
+__pycache__/*
+.idea/*
+
+
+

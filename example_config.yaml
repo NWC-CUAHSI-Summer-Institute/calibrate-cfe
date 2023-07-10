@@ -1,8 +1,12 @@
 defaults:
   - _self_
-  - override hydra\launcher: joblib
+  - override hydra/launcher: joblib
 
-cwd: /scratch/sbhuiya2/SI2023
+ cwd: /mnt/sdb1/tkb5476/data
+#cwd: /scratch/sbhuiya2/SI2023
+cwd: /mnt/sdb1/tkb5476
+#cwd: /scratch/sbhuiya2/SI2023
+
 # Win-Ryoko
 # cwd: G:\Shared drives\SI_NextGen_Aridity
 
@@ -18,7 +22,7 @@ io_dir:
   usgs_streamflow_dir: ${cwd}/data/camels/gauch_etal_2020/usgs_streamflow
   nldas_forcing_dir: ${cwd}/data/camels/gauch_etal_2020/nldas_hourly
   basin_dir: ${cwd}/data/camels/gauch_etal_2020
-  cfe_c_config_dir: ${cwd}/calibrate_cfe/configs/CFE_Config_Cver_from_Luciana
+  cfe_c_config_dir: ${cwd}/calibrate-cfe/configs/CFE_Config_Cver_from_Luciana
 
   # Win-Ryoko
   # data_dir: ${cwd}\data
@@ -35,8 +39,9 @@ io_dir:
   # cfe_c_config_dir: ${cwd}\calibrate_cfe\configs\CFE_Config_Cver_from_Luciana
 
 model_settings:
-  basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_5.txt
-  missing_data_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data.txt
+  basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_561.txt
+  missing_data_file: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_v2023.txt
+  missing_data_file_testing: ${cwd}/data/camels/gauch_etal_2020/basin_list_missing_data_testing_period_v2023.txt
   time_split_file: ${cwd}/data/model_common_configs/cal-val-test-period.json
   parameter_bound_file: ${cwd}/data/model_common_configs/CFE_parameter_bounds.json
 
