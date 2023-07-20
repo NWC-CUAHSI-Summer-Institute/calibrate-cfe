@@ -35,6 +35,9 @@ project_folder/
 │  ├─ results/
 ```
 
+# Model outputs
+The initial parameters, the best calibrated parameters, and the associated steamflow ouputs are hosted here https://www.hydroshare.org/resource/f7d6db8f8677402d808531924bbcf60c/ 
+
 ## Authors 
 Modified by 2023 SI team
 - Ryoko Araki (San Diego State University & University of California, Santa Barbara, @ry4git)
