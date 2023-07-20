@@ -13,7 +13,6 @@ import hydra
 # import package
 import spotpy
 
-from pathlib import Path
 import os
 import sys
 import numpy as np
@@ -22,19 +21,11 @@ import json
 import matplotlib.pyplot as plt
 
 # import the cfe model
-sys.path.append(r'../cfe_py')
+from pathlib import Path
+cfe_py_path = Path(__file__).resolve().parent.parent / 'cfe_py'
+sys.path.append(str(cfe_py_path))
 import bmi_cfe
 import cfe
-
-
-# Folder structure
-# project_folder/
-# ├─ data/
-# ├─ cfe_py/
-# ├─ calibrate_cfe/
-# │  ├─ configs/
-# │  ├─ results/
-
 
 # ----------------------------------- Setup the Spotpy Class ----------------------------------- #
 class Spotpy_setup(object):
@@ -187,7 +178,7 @@ class Spotpy_setup(object):
 
         # run the model for the spin-up period
         for precip, pet in zip(self.df_forcing_spinup['total_precipitation'],
-                               self.df_forcing_spinup['potential_evaporation']):
+                            self.df_forcing_spinup['potential_evaporation']):
             # print(f"###----------loaded precip, pet: {precip},{pet}.------------###")
             # sys.exit(1)
 
@@ -254,7 +245,7 @@ class Spotpy_setup(object):
             self.obj_function = np.nan
         else:
             self.obj_function = spotpy.objectivefunctions.kge(evaluation[~np.isnan(evaluation)],
-                                                              simulation[~np.isnan(evaluation)])
+                                                            simulation[~np.isnan(evaluation)])
         return self.obj_function
 
 
@@ -379,7 +370,7 @@ def main(cfg):
 
         scheme = calibration_instance.cfemodel.surface_partitioning_scheme
 
-        all_result_filename = f'{g_str}_all_results_dds_{scheme}_{str(N)}.npy'
+        all_result_filename = f'{g_str}_all_results_dds.npy'
         all_result_file = os.path.join(raw_results_path, all_result_filename)
         np.save(all_result_file, results)
 
@@ -404,14 +395,14 @@ def main(cfg):
                         "best objective values": best_obj_value,
                         "best simulation results": list(best_sim)}
 
-            best_run_filename = f'{g_str}_best_run_{scheme}_{str(N)}.json'
+            best_run_filename = f'{g_str}_best_run.json'
             best_run_file = os.path.join(best_run_dir, best_run_filename)
 
             with open(best_run_file, 'w', encoding='utf-8') as f:
                 json.dump(best_run, f, ensure_ascii=False, indent=4)
 
             ### plot parameter trace png ###
-            param_trace_imgname = f'{g_str}_param_trace_{scheme}_{str(N)}.png'
+            param_trace_imgname = f'{g_str}_param_trace.png'
             param_trace_dir = os.path.join(png_dir, "ParamTrace")
             if os.path.exists(param_trace_dir) == False:
                 os.makedirs(param_trace_dir)
@@ -430,7 +421,7 @@ def main(cfg):
             plt.ylabel('KGE Objective Values', fontsize=24)
             plt.title("Trace of the Objective Values [KGE]", fontsize=26)
 
-            objvalues_imgname = f'{g_str}_obj_values_{scheme}_{str(N)}.png'
+            objvalues_imgname = f'{g_str}_obj_values.png'
             objvalues_dir = os.path.join(png_dir, "Obj_Trace")
             if os.path.exists(objvalues_dir) == False:
                 os.makedirs(objvalues_dir)
@@ -455,7 +446,7 @@ def main(cfg):
             # Plot precip
             ax2 = ax1.twinx()
             p3, = ax2.plot(dates[0:8760], calibration_instance.df_forcing['total_precipitation'][0:8760], 'tab:blue',
-                           label="precip")
+                        label="precip")
             ax2.set_ylim([50, 0])
             ax2.margins(x=0)
             # ax2.invert_yaxis()
@@ -467,10 +458,10 @@ def main(cfg):
 
             plt.legend(handles=[p1, p2, p3], fontsize=24, loc='right', bbox_to_anchor=(0.5, 0.5, 0.5, 0.5))
             plt.title(f"Simulated Streamflow against Observation after {N} Iterations of Calibration [ID: {g_str}]",
-                      fontsize=26)
+                    fontsize=26)
             plt.tight_layout()
 
-            comparison_imgname = f'{g_str}_comparison_{scheme}_{str(N)}.png'
+            comparison_imgname = f'{g_str}_comparison.png'
             comparison_imgdir = os.path.join(png_dir, "Comparison")
             if os.path.exists(comparison_imgdir) == False:
                 os.makedirs(comparison_imgdir)
