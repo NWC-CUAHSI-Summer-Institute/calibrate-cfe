@@ -4,8 +4,8 @@ run_daily_calibration.py
 Calibrates the CFE hydrologic model for DAILY time steps using the
 snow17 + PET + CFE setup integrated via SPOTPY DDS.
 
-Units: mm/day for both simulated and observed (per Suma's direction).
-Adapted from Abhinav Gupta's setup.
+Units: mm/day for both simulated and observed.
+
 """
 
 import argparse
