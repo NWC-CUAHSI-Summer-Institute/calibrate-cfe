@@ -1,5 +1,7 @@
 _pycache_/*
 configs/*
+!configs/soil_classic/
+!configs/soil_classic/*.json
 results/*
 !results/gage_03463300/
 !results/gage_03463300/*.json
