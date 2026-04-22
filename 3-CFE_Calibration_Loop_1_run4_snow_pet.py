@@ -1,5 +1,5 @@
 ############################################
-# Run 4: Ryoko's hourly CFE setup + Snow17 + Priestley-Taylor PET
+# Run 4: Hourly CFE setup + Snow17 + Priestley-Taylor PET
 # Based on 3-CFE_Calibration_Loop_1.py
 # Changes from Run 3:
 #   1. Snow17 (daily) processes NLDAS precip+temp → effective precip → disaggregated to hourly
