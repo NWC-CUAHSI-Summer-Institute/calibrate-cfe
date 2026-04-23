@@ -1,0 +1,32 @@
+defaults:
+  - _self_
+  - override hydra/launcher: joblib
+
+# Set cwd to the root of your project directory
+cwd: /path/to/your/cfe_hourly_test
+
+CFE_config:
+  soil_scheme: classic
+
+io_dir:
+  data_dir: ${cwd}/data
+  config_dir: ${cwd}/calibrate-cfe/configs/soil_classic
+  results_dir: ${cwd}/calibrate-cfe/results
+  cfe_dir: ${cwd}/cfe_py
+  usgs_streamflow_dir: ${cwd}/data/camels/gauch_etal_2020/usgs_streamflow
+  nldas_forcing_dir: ${cwd}/data/camels/gauch_etal_2020/nldas_hourly
+  gauch_2020_dir: ${cwd}/data/camels/gauch_etal_2020
+
+model_settings:
+  basin_file: ${cwd}/data/camels/gauch_etal_2020/basin_list.txt
+  missing_data_file: ${cwd}/data/camels/gauch_etal_2020/missing_data.txt
+  missing_data_file_testing: ${cwd}/data/camels/gauch_etal_2020/missing_data.txt
+  time_split_file: ${cwd}/data/model_common_configs/cal-val-test-period.json
+  parameter_bound_file: ${cwd}/data/model_common_configs/CFE_parameter_bounds.json
+
+calib_variables:
+  N: 500
+  max_nbasin_per_loop: 1
+  print_all_process: False
+
+basin_id: "03463300"
