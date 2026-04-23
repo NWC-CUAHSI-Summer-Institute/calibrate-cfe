@@ -12,7 +12,7 @@ Usage:
   python calibrate_aorc_gpu.py --base_dir /path/to/data --cfe_dir /path/to/cfe_py --N 1000
   python calibrate_aorc_gpu.py --base_dir /path/to/data --cfe_dir /path/to/cfe_py --test_only
 
-Data paths on dualearth1 GPU (svyas@10.115.13.12):
+Data paths on dualearth1 GPU:
   Forcing: /mnt/disk2/suma_helen_poster/03463300_aorc_hourly.csv
   Obs:     /mnt/disk2/suma_helen_poster/03463300_usgs_hourly_2018_2024.csv
   cfe_py:  /mnt/disk2/suma_helen_poster/cfe_py
