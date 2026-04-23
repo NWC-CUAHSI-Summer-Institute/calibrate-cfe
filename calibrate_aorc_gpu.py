@@ -16,7 +16,8 @@ Data paths on dualearth1 GPU:
   Forcing: /mnt/disk2/suma_helen_poster/03463300_aorc_hourly.csv
   Obs:     /mnt/disk2/suma_helen_poster/03463300_usgs_hourly_2018_2024.csv
   cfe_py:  /mnt/disk2/suma_helen_poster/cfe_py
-  config:  /mnt/disk2/suma_helen_poster/run_gpu
+            (clone from: https://github.com/NWC-CUAHSI-Summer-Institute/cfe_py)
+  config:  use --config_dir pointing to results/gage_03463300_aorc_helene/ in this repo
 """
 
 import argparse
