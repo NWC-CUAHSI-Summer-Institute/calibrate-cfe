@@ -1,0 +1,26 @@
+{
+    "forcing_file": "/path/to/your/data/03463300_aorc_hourly.csv",
+    "catchment_area_km2": 112.14,
+    "alpha_fc": 0.33,
+    "partition_scheme": "Schaake",
+    "soil_params": {
+        "bb": 4.05,
+        "satdk": 3.38e-06,
+        "satpsi": 0.355,
+        "slop": 1.0,
+        "smcmax": 0.439,
+        "wltsmc": 0.066,
+        "D": 2.0
+    },
+    "max_gw_storage": 0.01,
+    "Cgw": 0.0018,
+    "expon": 6.0,
+    "gw_storage": 0.05,
+    "soil_storage": 0.667,
+    "K_lf": 0.01,
+    "K_nash": 0.03,
+    "nash_storage": [0.0, 0.0],
+    "giuh_ordinates": [0.06, 0.51, 0.28, 0.12, 0.03],
+    "stand_alone": 0,
+    "soil_scheme": "classic"
+}
