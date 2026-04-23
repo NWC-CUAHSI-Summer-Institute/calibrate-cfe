@@ -1,5 +1,5 @@
 {
-    "forcing_file": "/path/to/your/data/03463300_aorc_hourly.csv",
+    "forcing_file": "/mnt/disk2/suma_helen_poster/03463300_aorc_hourly.csv",
     "catchment_area_km2": 112.14,
     "alpha_fc": 0.33,
     "partition_scheme": "Schaake",
