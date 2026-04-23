@@ -170,6 +170,7 @@ class Spotpy_setup(object):
         with open(CFE_CONFIG_FILE, 'r') as f:
             cfe_cfg = json.load(f)
 
+        cfe_cfg['forcing_file']          = FORCING_FILE   # override with --base_dir path
         cfe_cfg['soil_params']['bb']     = vector['bb']
         cfe_cfg['soil_params']['smcmax'] = vector['smcmax']
         cfe_cfg['soil_params']['satdk']  = vector['satdk']
@@ -254,6 +255,7 @@ def run_testing_period(best_param_dict, parameter_bounds, output_dir):
     with open(CFE_CONFIG_FILE, 'r') as f:
         cfe_cfg = json.load(f)
 
+    cfe_cfg['forcing_file']          = FORCING_FILE   # override with --base_dir path
     cfe_cfg['soil_params']['bb']     = best_param_dict['bb']
     cfe_cfg['soil_params']['smcmax'] = best_param_dict['smcmax']
     cfe_cfg['soil_params']['satdk']  = best_param_dict['satdk']
