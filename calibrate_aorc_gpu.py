@@ -1,15 +1,16 @@
 """
-GPU Run: Hourly CFE calibration with AORC forcing for gauge 03463300
-Ryoko's exact Run 3 setup, adapted for AORC (no Snow17, PT-PET computed internally).
-
-Forcing:  /mnt/disk2/suma_helen_poster/03463300_aorc_hourly.csv
-Obs:      /mnt/disk2/suma_helen_poster/03463300_usgs_hourly_2018_2024.csv
+Hourly CFE calibration with AORC forcing for gauge 03463300.
+No Snow17; PT-PET computed from AORC shortwave radiation + temperature.
 
 Time splits:
   Spinup (cal):   2017-01-01 00:00:00 → 2017-12-31 23:00:00
-  Calibration:    2018-01-01 00:00:00 → 2022-09-30 23:00:00
+  Calibration:    2018-01-01 05:00:00 → 2022-09-30 23:00:00
   Spinup (test):  2022-10-01 00:00:00 → 2023-09-30 23:00:00
   Test (Helena):  2023-10-01 00:00:00 → 2024-10-31 23:00:00
+
+Usage:
+  python calibrate_aorc_gpu.py --base_dir /path/to/data --cfe_dir /path/to/cfe_py --N 1000
+  python calibrate_aorc_gpu.py --base_dir /path/to/data --cfe_dir /path/to/cfe_py --test_only
 """
 
 import argparse
@@ -24,20 +25,21 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-BASE_DIR   = Path('/mnt/disk2/suma_helen_poster')
-CFE_DIR    = BASE_DIR / 'cfe_py'
-CONFIG_DIR = BASE_DIR / 'run_gpu'
-RESULTS_DIR = BASE_DIR / 'run_gpu' / 'results'
+# Paths are set via --base_dir and --cfe_dir arguments (see main())
+BASE_DIR    = None
+CFE_DIR     = None
+CONFIG_DIR  = None
+RESULTS_DIR = None
 
-sys.path.insert(0, str(CFE_DIR))
-import bmi_cfe
-import cfe
+GAUGE_ID          = '03463300'
+FORCING_FILE      = None
+OBS_FILE          = None
+CFE_CONFIG_FILE   = None
+PARAM_BOUNDS_FILE = None
 
-GAUGE_ID        = '03463300'
-FORCING_FILE    = str(BASE_DIR / f'{GAUGE_ID}_aorc_hourly.csv')
-OBS_FILE        = str(BASE_DIR / f'{GAUGE_ID}_usgs_hourly_2018_2024.csv')
-CFE_CONFIG_FILE = str(CONFIG_DIR / f'cat_{GAUGE_ID}_bmi_config_cfe.json')
-PARAM_BOUNDS_FILE = str(CONFIG_DIR / 'CFE_parameter_bounds.json')
+# Imported dynamically in main() after CFE_DIR path is added to sys.path
+bmi_cfe = None
+cfe     = None
 
 ALBEDO   = 0.20
 ALPHA_PT = 1.26   # fixed Priestley-Taylor alpha (not calibrated)
@@ -365,7 +367,31 @@ def main():
     parser = argparse.ArgumentParser(description='CFE calibration with AORC forcing, gauge 03463300')
     parser.add_argument('--N', type=int, default=500, help='Number of DDS iterations')
     parser.add_argument('--test_only', action='store_true', help='Skip calibration, run test period only')
+    parser.add_argument('--base_dir', type=str, required=True,
+                        help='Directory containing AORC forcing and USGS obs CSVs')
+    parser.add_argument('--cfe_dir', type=str, required=True,
+                        help='Path to cfe_py directory (contains bmi_cfe.py and cfe.py)')
+    parser.add_argument('--config_dir', type=str, default=None,
+                        help='Directory with CFE JSON config and parameter bounds (default: same as base_dir)')
     args = parser.parse_args()
+
+    global BASE_DIR, CFE_DIR, CONFIG_DIR, RESULTS_DIR
+    global FORCING_FILE, OBS_FILE, CFE_CONFIG_FILE, PARAM_BOUNDS_FILE
+    global bmi_cfe, cfe
+
+    BASE_DIR    = Path(args.base_dir)
+    CFE_DIR     = Path(args.cfe_dir)
+    CONFIG_DIR  = Path(args.config_dir) if args.config_dir else BASE_DIR
+    RESULTS_DIR = BASE_DIR / 'results'
+
+    sys.path.insert(0, str(CFE_DIR))
+    import bmi_cfe as bmi_cfe
+    import cfe as cfe
+
+    FORCING_FILE     = str(BASE_DIR / f'{GAUGE_ID}_aorc_hourly.csv')
+    OBS_FILE         = str(BASE_DIR / f'{GAUGE_ID}_usgs_hourly_2018_2024.csv')
+    CFE_CONFIG_FILE  = str(CONFIG_DIR / f'cat_{GAUGE_ID}_bmi_config_cfe.json')
+    PARAM_BOUNDS_FILE = str(CONFIG_DIR / 'CFE_parameter_bounds.json')
 
     for d in [RESULTS_DIR, RESULTS_DIR / 'raw', RESULTS_DIR / 'images', RESULTS_DIR / 'best_runs']:
         os.makedirs(d, exist_ok=True)
