@@ -9,9 +9,9 @@ results/*
 !results/gage_03463300_run4/
 !results/gage_03463300_run4/*.json
 !results/gage_03463300_run4/*.png
-!results/gage_03463300_aorc_helena/
-!results/gage_03463300_aorc_helena/*.json
-!results/gage_03463300_aorc_helena/*.png
+!results/gage_03463300_aorc_helene/
+!results/gage_03463300_aorc_helene/*.json
+!results/gage_03463300_aorc_helene/*.png
 outputs/*
 multirun/*
 drafts/*

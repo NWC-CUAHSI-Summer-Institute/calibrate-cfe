@@ -6,7 +6,7 @@ Time splits:
   Spinup (cal):   2017-01-01 00:00:00 → 2017-12-31 23:00:00
   Calibration:    2018-01-01 05:00:00 → 2022-09-30 23:00:00
   Spinup (test):  2022-10-01 00:00:00 → 2023-09-30 23:00:00
-  Test (Helena):  2023-10-01 00:00:00 → 2024-10-31 23:00:00
+  Test (Helene):  2023-10-01 00:00:00 → 2024-10-31 23:00:00
 
 Usage:
   python calibrate_aorc_gpu.py --base_dir /path/to/data --cfe_dir /path/to/cfe_py --N 1000
@@ -331,12 +331,12 @@ def run_testing_period(best_param_dict, parameter_bounds, output_dir):
         })
         df_out.to_csv(os.path.join(output_dir, f'{GAUGE_ID}_test_results.csv'), index=False)
 
-        # Helena zoom: Sep 20 - Oct 5 2024
-        helena_mask = (test_dates >= pd.Timestamp('2024-09-20')) & (test_dates <= pd.Timestamp('2024-10-05'))
-        sim_h  = sim_test[helena_mask]
-        obs_h  = obs_test[np.where(helena_mask)[0]] if len(obs_test) == len(sim_test) else sim_test[helena_mask]
-        prcp_h = df_test['total_precipitation'].values[helena_mask]
-        dates_h = test_dates[helena_mask]
+        # Helene zoom: Sep 20 - Oct 5 2024
+        helene_mask = (test_dates >= pd.Timestamp('2024-09-20')) & (test_dates <= pd.Timestamp('2024-10-05'))
+        sim_h  = sim_test[helene_mask]
+        obs_h  = obs_test[np.where(helene_mask)[0]] if len(obs_test) == len(sim_test) else sim_test[helene_mask]
+        prcp_h = df_test['total_precipitation'].values[helene_mask]
+        dates_h = test_dates[helene_mask]
 
         # Full test period plot
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(20, 12))
@@ -352,7 +352,7 @@ def run_testing_period(best_param_dict, parameter_bounds, output_dir):
         ax2_twin.set_ylim([100, 0])
         ax2_twin.set_ylabel('Precip (mm/h)')
 
-        # Helena zoom
+        # Helene zoom
         ax2.plot(dates_h, sim_h, 'tomato', lw=2, label='simulated')
         ax2.plot(dates_h, obs_h, 'k', lw=1.5, label='observed')
         ax2.set_ylabel('Discharge (mm/h)')
@@ -360,11 +360,11 @@ def run_testing_period(best_param_dict, parameter_bounds, output_dir):
         ax2_r.bar(dates_h, prcp_h, color='tab:blue', alpha=0.4, label='precip', width=0.04)
         ax2_r.set_ylim([50, 0])
         ax2_r.set_ylabel('Precip (mm/h)')
-        ax2.set_title('Helena Zoom: Sep 20 – Oct 5, 2024')
+        ax2.set_title('Helene Zoom: Sep 20 – Oct 5, 2024')
         ax2.legend()
 
         plt.tight_layout()
-        plt.savefig(os.path.join(output_dir, f'{GAUGE_ID}_test_helena.png'), bbox_inches='tight', dpi=150)
+        plt.savefig(os.path.join(output_dir, f'{GAUGE_ID}_test_helene.png'), bbox_inches='tight', dpi=150)
         plt.close()
         print(f"Plots saved to {output_dir}")
 
@@ -468,7 +468,7 @@ def main():
     if best_run_file.exists():
         with open(best_run_file) as f:
             best_run = json.load(f)
-        print("\nRunning test period (Helena)...")
+        print("\nRunning test period (Helene)...")
         run_testing_period(
             best_run['best_parameters'],
             parameter_bounds,
