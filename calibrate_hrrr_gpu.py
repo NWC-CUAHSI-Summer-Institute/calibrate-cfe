@@ -47,6 +47,13 @@ To reproduce:
     --config_dir /path/to/calibrate-cfe/results/gage_03463300_hrrr_helene \
     --N 1000
 
+  # To skip calibration and run test period only (using existing best_run JSON):
+  python3 calibrate_hrrr_gpu.py \
+    --base_dir   /mnt/disk2/suma_helen_poster \
+    --cfe_dir    /mnt/disk2/suma_helen_poster/cfe_py \
+    --config_dir /path/to/calibrate-cfe/results/gage_03463300_hrrr_helene \
+    --test_only
+
   # config_dir must contain:
   #   cat_03463300_bmi_config_cfe.json  (CFE model config)
   #   CFE_parameter_bounds.json         (DDS search bounds)
