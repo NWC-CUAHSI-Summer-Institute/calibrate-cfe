@@ -16,7 +16,7 @@ Data on GPU (svyas@dualearth1):
   Forcing (pre-built): /mnt/disk2/suma_helen_poster/03463300_hrrr_hourly.csv
   Obs:                 /mnt/disk2/suma_helen_poster/03463300_usgs_hourly_2018_2024.csv
 
-  The HRRR forcing CSV was built by concatenating Suma's daily files:
+  The HRRR forcing CSV was built by concatenating HRRR files present of Dualearth:
     Raw HRRR source: /mnt/disk1/usgs_streamflow_allgauges/subdaily_15min/test/output_03463300_hrrr/
     Structure: ~2300 daily subdirs (camels_YYYYMMDD/camels_03463300_agg.csv), 24 rows each
     Columns renamed: TMP→temperature (K→°C), DSWRF→shortwave_radiation,
