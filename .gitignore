@@ -9,11 +9,9 @@ results/*
 !results/gage_03463300_run4/
 !results/gage_03463300_run4/*.json
 !results/gage_03463300_run4/*.png
-!results/gage_03463300_hrrr_helene/
-!results/gage_03463300_hrrr_helene/*.json
-!results/gage_03463300_hrrr_helene/*.png
-!results/gage_03463300_hrrr_helene/CFE_parameter_bounds.json
-!results/gage_03463300_hrrr_helene/cat_03463300_bmi_config_cfe.json
+!results/gage_03463300_aorc_helene/
+!results/gage_03463300_aorc_helene/*.json
+!results/gage_03463300_aorc_helene/*.png
 outputs/*
 multirun/*
 drafts/*
