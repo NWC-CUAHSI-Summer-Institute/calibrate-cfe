@@ -12,15 +12,44 @@ Time splits:
   Spinup (test):  2022-10-01 00:00:00 → 2023-09-30 23:00:00
   Test (Helene):  2023-10-01 00:00:00 → 2024-10-31 23:00:00
 
+Data on GPU (svyas@dualearth1):
+  Forcing (pre-built): /mnt/disk2/suma_helen_poster/03463300_hrrr_hourly.csv
+  Obs:                 /mnt/disk2/suma_helen_poster/03463300_usgs_hourly_2018_2024.csv
+
+  The HRRR forcing CSV was built by concatenating Suma's daily files:
+    Raw HRRR source: /mnt/disk1/usgs_streamflow_allgauges/subdaily_15min/test/output_03463300_hrrr/
+    Structure: ~2300 daily subdirs (camels_YYYYMMDD/camels_03463300_agg.csv), 24 rows each
+    Columns renamed: TMP→temperature (K→°C), DSWRF→shortwave_radiation,
+                     APCP_1hr_acc_fcst→total_precipitation, PRES→pressure (/100),
+                     SPFH→specific_humidity, UGRD→wind_u, VGRD→wind_v
+    Build command:
+      python3 -c "
+      import pandas as pd, glob
+      base = '/mnt/disk1/usgs_streamflow_allgauges/subdaily_15min/test/output_03463300_hrrr'
+      files = sorted(glob.glob(f'{base}/camels_*/camels_03463300_agg.csv'))
+      df = pd.concat([pd.read_csv(f) for f in files])
+      df = df.rename(columns={'time':'date','TMP':'temperature','DSWRF':'shortwave_radiation',
+                               'DLWRF':'longwave_radiation','APCP_1hr_acc_fcst':'total_precipitation',
+                               'PRES':'pressure','SPFH':'specific_humidity','UGRD':'wind_u','VGRD':'wind_v'})
+      df['temperature'] = df['temperature'] - 273.15
+      df['pressure'] = df['pressure'] / 100
+      df.to_csv('/mnt/disk2/suma_helen_poster/03463300_hrrr_hourly.csv', index=False)
+      "
+
 To reproduce:
-  python3 run_gpu/calibrate_hrrr_gpu.py \
-    --base_dir /mnt/disk2/suma_helen_poster \
-    --cfe_dir  /mnt/disk2/suma_helen_poster/cfe_py \
+  # 1. Clone cfe_py
+  git clone https://github.com/NWC-CUAHSI-Summer-Institute/cfe_py.git /mnt/disk2/suma_helen_poster/cfe_py
+
+  # 2. Clone this repo and run
+  python3 calibrate_hrrr_gpu.py \
+    --base_dir   /mnt/disk2/suma_helen_poster \
+    --cfe_dir    /mnt/disk2/suma_helen_poster/cfe_py \
     --config_dir /path/to/calibrate-cfe/results/gage_03463300_hrrr_helene \
     --N 1000
 
-cfe_py source:
-  git clone https://github.com/NWC-CUAHSI-Summer-Institute/cfe_py.git
+  # config_dir must contain:
+  #   cat_03463300_bmi_config_cfe.json  (CFE model config)
+  #   CFE_parameter_bounds.json         (DDS search bounds)
 """
 
 import argparse
